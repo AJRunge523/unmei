@@ -1,0 +1,85 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>edu.cmu</groupId>
+    <artifactId>mirai</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <artifactId>nlp</artifactId>
+  
+  <dependencies>
+      <!-- http://fastutil.di.unimi.it/ -->
+    <dependency>
+        <groupId>it.unimi.dsi</groupId>
+        <artifactId>fastutil</artifactId>
+        <version>8.1.0</version>
+    </dependency>
+    
+    <!-- 3rd party libraries -->   
+    <dependency>
+        <groupId>edu.stanford.nlp</groupId>
+        <artifactId>stanford-corenlp</artifactId>
+        <version>3.8.0</version>
+    </dependency>
+    
+    <dependency>
+	    <groupId>edu.stanford.nlp</groupId>
+	    <artifactId>stanford-corenlp</artifactId>
+	    <version>3.8.0</version>
+	    <classifier>models</classifier>
+	</dependency>
+    
+    <dependency>
+        <groupId>nz.ac.waikato.cms.weka</groupId>
+        <artifactId>weka-stable</artifactId>
+        <version>3.8.0</version>
+    </dependency>
+    
+	    <!-- https://mvnrepository.com/artifact/nz.ac.waikato.cms.weka/LibSVM -->
+	<dependency>
+	    <groupId>nz.ac.waikato.cms.weka</groupId>
+	    <artifactId>LibSVM</artifactId>
+	    <version>1.0.10</version>
+	</dependency>
+    
+	<!-- https://mvnrepository.com/artifact/nz.ac.waikato.cms.weka/LibLINEAR -->
+	<dependency>
+	    <groupId>nz.ac.waikato.cms.weka</groupId>
+	    <artifactId>LibLINEAR</artifactId>
+	    <version>1.9.7</version>
+	</dependency>
+    
+    <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>23.0</version>
+    </dependency>
+    
+    <!-- Logging dependencies -->
+    
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>2.0.1</version>
+     </dependency>
+
+     <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>2.0.1</version> 
+     </dependency>
+    
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j-impl</artifactId>
+        <version>2.0.1</version>
+    </dependency>
+    
+    <!-- Test dependencies -->
+    <dependency>
+       <groupId>junit</groupId>
+       <artifactId>junit</artifactId>
+    </dependency>
+  </dependencies>
+  
+</project>
