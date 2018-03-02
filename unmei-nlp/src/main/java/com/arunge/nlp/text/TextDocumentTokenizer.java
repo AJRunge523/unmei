@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.arunge.nlp.api.AnnotatedToken;
-import com.arunge.nlp.api.Annotator;
 import com.arunge.nlp.api.Token;
 import com.arunge.nlp.api.TokenFilters;
 import com.arunge.nlp.api.TokenFilters.TokenFilter;

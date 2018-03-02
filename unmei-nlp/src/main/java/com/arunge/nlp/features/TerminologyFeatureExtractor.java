@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.arunge.nlp.api.AnnotatedToken;
 import com.arunge.nlp.api.Annotator;
 import com.arunge.nlp.api.FeatureDescriptor;
@@ -20,6 +23,8 @@ import com.arunge.nlp.text.PreprocessedTextField;
 
 public class TerminologyFeatureExtractor implements FeatureExtractor<PreprocessedTextDocument> {
 
+    private static Logger LOG = LoggerFactory.getLogger(TerminologyFeatureExtractor.class);
+    
     private List<String[]> terms;
     private List<String> featNames;
     private Map<String, List<TermEntry>> termLookup;
@@ -76,7 +81,7 @@ public class TerminologyFeatureExtractor implements FeatureExtractor<Preprocesse
                 }
             }
         }
-//        System.out.println("Extracted " + featCount + " features in " + (System.currentTimeMillis() - start) + " millis.");
+        LOG.trace("Extracted {} features in {} millis.", featCount, (System.currentTimeMillis() - start));
         return features;
     }
     
