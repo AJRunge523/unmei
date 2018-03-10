@@ -12,6 +12,8 @@ import com.arunge.nlp.text.PreprocessedTextDocument;
 import com.arunge.nlp.text.PreprocessedTextField;
 import com.arunge.nlp.text.TextDocument;
 
+import edu.stanford.nlp.coref.CorefCoreAnnotations;
+import edu.stanford.nlp.coref.data.CorefChain;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -46,8 +48,12 @@ public class StanfordNLPPreprocessingPipeline implements NLPPreprocessingPipelin
                 break;
             }
         }
+//        annotatorList += ",parse,mention,coref";
+//        System.out.println(annotatorList);
         Properties props = new Properties();
         props.setProperty("annotators",  annotatorList);
+//        props.setProperty("coref.algorithm", "neural");
+
         pipeline = new StanfordCoreNLP(props);
     }
     
@@ -58,11 +64,14 @@ public class StanfordNLPPreprocessingPipeline implements NLPPreprocessingPipelin
             PreprocessedTextField field = new PreprocessedTextField();
             String fieldText = doc.getTextField(fieldName);
             Annotation document = pipeline.process(fieldText);
+//            for (CorefChain cc : document.get(CorefCoreAnnotations.CorefChainAnnotation.class).values()) {
+//                System.out.println("\t" + cc);
+//              }
             for(CoreMap sentence : document.get(CoreAnnotations.SentencesAnnotation.class)) {
                 List<AnnotatedToken> sentenceToks = new ArrayList<>();
                 for(CoreLabel label : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
                     AnnotatedToken token = new AnnotatedToken(label.word(), label.beginPosition(), label.endPosition());
-                    String pos = sentence.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+                    String pos = label.get(CoreAnnotations.PartOfSpeechAnnotation.class);
                     if(pos != null) {
                         token.addAnnotation(Annotator.POS, pos);
                     }
@@ -72,6 +81,10 @@ public class StanfordNLPPreprocessingPipeline implements NLPPreprocessingPipelin
                     }
                     if(segmentAnn) {
                         token.addAnnotation(Annotator.SEGMENT, fieldName);
+                    }
+                    String ner = label.ner();
+                    if(ner != null) {
+                        token.addAnnotation(Annotator.NER, ner);
                     }
                     sentenceToks.add(token);
                 }
