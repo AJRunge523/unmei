@@ -120,12 +120,6 @@ public class TextDocumentTokenizer {
                         });
                     }
                 }
-//                if(splitFields) {
-//                    tokens = tokens.map(t -> {
-//                        t.addAnnotation(Annotator.SEGMENT, fieldName);
-//                        return t;
-//                    });
-//                }
                 filteredSentences.add(tokens.collect(Collectors.toList()));
             }
             PreprocessedTextField filteredField = new PreprocessedTextField(filteredSentences);
