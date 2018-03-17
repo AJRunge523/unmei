@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +75,21 @@ public class SVMRank {
             LOG.debug(line);
         }
         return process.exitValue();
+    }
+
+    public static String instanceToString(int queryId, int rank, Map<Integer, Double> instance) {
+        StringBuffer inst = new StringBuffer().append(rank + " ")
+                .append("qid:")
+                .append(queryId);
+        instance.keySet().stream().sorted().forEach(index -> {
+            inst.append(" ")
+                .append(index)
+                .append(":")
+                .append(instance.get(index));
+        });
+        return inst.toString();
+        
+                
     }
     
 }

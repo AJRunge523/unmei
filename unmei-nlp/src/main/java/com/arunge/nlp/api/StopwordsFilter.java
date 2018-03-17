@@ -6,9 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.logging.log4j.core.util.Charsets;
-
 import com.arunge.nlp.api.TokenFilters.TokenFilter;
+import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class StopwordsFilter implements TokenFilter{
