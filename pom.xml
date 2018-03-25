@@ -3,6 +3,7 @@
   <artifactId>unmei</artifactId>
   <name>Collection of utility code and classes for wide reuse</name>
   <packaging>pom</packaging>
+  <version>0.0.1-SNAPSHOT</version>
   <parent>
     <groupId>com.arunge</groupId>
     <artifactId>arunge-parent</artifactId>
