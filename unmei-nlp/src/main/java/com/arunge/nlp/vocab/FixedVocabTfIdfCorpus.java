@@ -22,12 +22,12 @@ public class FixedVocabTfIdfCorpus extends TfIdfCorpus{
 
     private static final long serialVersionUID = -6407355498606370827L;
 
-    public FixedVocabTfIdfCorpus(DFVocabulary vocab) {
+    public FixedVocabTfIdfCorpus(CountingVocabulary vocab) {
         super();
         this.vocab = vocab;
     }
 
-    public FixedVocabTfIdfCorpus(DFVocabulary vocab, TFType type) {
+    public FixedVocabTfIdfCorpus(CountingVocabulary vocab, TFType type) {
         super(type);
         this.vocab = vocab;
     }

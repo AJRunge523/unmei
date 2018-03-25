@@ -25,6 +25,13 @@ public class CorpusDocument implements Serializable {
         this.docFeatures = new Int2DoubleOpenHashMap();
     }
 
+    protected CorpusDocument(CorpusDocument doc) {
+        this.docId = doc.docId;
+        this.docVocab = new Int2DoubleOpenHashMap(doc.docVocab);
+        this.length = doc.length;
+        this.docFeatures = new Int2DoubleOpenHashMap(doc.docFeatures);
+    }
+    
     /**
      * Adds the word to the document or, if already present, increments the count for the word instead.
      * Returns true if the word was added, false otherwise.
@@ -69,12 +76,16 @@ public class CorpusDocument implements Serializable {
         }
     }
     
-    public void buildLengthNormCountDoc() {
-        docVocab.replaceAll((key, value) -> value / length);
+    public CorpusDocument buildLengthNormCountDoc() {
+        CorpusDocument copy = new CorpusDocument(this);
+        copy.docVocab.replaceAll((key, value) -> value / length);
+        return copy;
     }
     
-    public void buildLogLengthNormCountDoc() { 
-        docVocab.replaceAll((key, value) -> 1 + Math.log(value / length));
+    public CorpusDocument buildLogLengthNormCountDoc() { 
+        CorpusDocument copy = new CorpusDocument(this);
+        copy.docVocab.replaceAll((key, value) -> 1 + Math.log(value / length));
+        return copy;
     }
     
     public void addFeature(int index, double value) {

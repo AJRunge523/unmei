@@ -33,7 +33,7 @@ public class TestVocabularySerialization {
     
     @Test
     public void testDFVocabSerialization() throws IOException {
-        DFVocabulary vocab = new DFVocabulary();
+        CountingVocabulary vocab = new CountingVocabulary();
         vocab.getOrAdd("this");
         vocab.getOrAdd("is");
         vocab.getOrAdd("a");
@@ -45,7 +45,7 @@ public class TestVocabularySerialization {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         vocab.write(baos);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        DFVocabulary deser = DFVocabulary.read(bais);
+        CountingVocabulary deser = CountingVocabulary.read(bais);
         assertEquals(vocab.size(), deser.size());
         assertEquals(vocab.getIndex("this"), deser.getIndex("this"));
         assertEquals(vocab.getIndex("is"), deser.getIndex("is"));

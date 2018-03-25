@@ -9,38 +9,50 @@ import java.util.Arrays;
 
 import com.arunge.nlp.api.Vocabulary;
 
-public class DFVocabulary extends Vocabulary {
+/**
+ * 
+ *<p>A vocabulary that supports counting word occurrences. Words can be counted both based on # of occurrences in the corpus
+ *   and # of documents the word occurs in in the corpus.<p>
+ *
+ * @author Andrew Runge
+ *
+ */
+public class CountingVocabulary extends Vocabulary {
 
     private static final long serialVersionUID = 4216302255003553294L;
+    private int[] wordFreqVector;
     private int[] docFreqVector;
     private int numDocs;
     
-    public DFVocabulary() {
+    public CountingVocabulary() {
         super();
         this.docFreqVector = new int[10];
+        this.wordFreqVector = new int[10];
     }
     
-    public DFVocabulary(int initSize) {
+    public CountingVocabulary(int initSize) {
         super(initSize);
         this.docFreqVector = new int[initSize];
+        this.wordFreqVector = new int[initSize];
     }
     
-    public DFVocabulary(DFVocabulary other) {
+    public CountingVocabulary(CountingVocabulary other) {
         super(other);
         this.docFreqVector = Arrays.copyOf(other.docFreqVector, other.docFreqVector.length);
+        this.wordFreqVector = Arrays.copyOf(other.wordFreqVector, other.wordFreqVector.length);
         this.numDocs = other.numDocs;
     }
     
     @Override
     public int getOrAdd(String word) {
-        if(!vocab.containsKey(word)) {
-            vocab.put(word, index2Word.size());
-            index2Word.add(word);
-            if(docFreqVector.length <= index2Word.size()) { 
-                docFreqVector = Arrays.copyOf(docFreqVector, docFreqVector.length * 3 / 2);
-            }
+        int wordIndex = super.getOrAdd(word);
+        if(docFreqVector.length <= index2Word.size()) { 
+            docFreqVector = Arrays.copyOf(docFreqVector, docFreqVector.length * 3 / 2);
         }
-        return vocab.get(word);
+        if(wordFreqVector.length <= index2Word.size()) {
+            wordFreqVector = Arrays.copyOf(wordFreqVector,  wordFreqVector.length * 3 / 2);
+        }
+        return wordIndex;
     }
     
     public void incrementDocFrequency(int index) {
@@ -64,6 +76,27 @@ public class DFVocabulary extends Vocabulary {
         return docFreqVector[index];
     }
     
+    public void incrementWordFrequency(int index) {
+        if(index >= index2Word.size()) {
+            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Word.size()));
+        }
+        wordFreqVector[index] += 1;
+    }
+    
+    public void setWordFrequency(int index, int frequency) {
+        if(index >= index2Word.size()) {
+            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Word.size()));
+        }
+        wordFreqVector[index] = frequency;
+    }
+    
+    public int getWordFrequency(int index) {
+        if(index >= index2Word.size()) {
+            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Word.size()));
+        }
+        return wordFreqVector[index];
+    }
+    
     public double[] computeIDFVector() {
         if(numDocs == 0) {
             return new double[docFreqVector.length];
@@ -83,6 +116,10 @@ public class DFVocabulary extends Vocabulary {
         return Arrays.copyOf(docFreqVector, docFreqVector.length);
     }
     
+    public int[] getWordFrequencies() {
+        return Arrays.copyOf(wordFreqVector, wordFreqVector.length);
+    }
+    
     public int getNumDocs() {
         return numDocs;
     }
@@ -96,13 +133,13 @@ public class DFVocabulary extends Vocabulary {
     }
 
     /**
-     * Creates a copy of this vocabulary with all terms below a certain frequency threshold removed.
+     * Creates a copy of this vocabulary with all terms below a certain document frequency threshold removed.
      * All remaining terms are remapped to new indices.
      * @param minInclusion
      * @return
      */
-    public DFVocabulary trimTail(int minInclusion) {
-        DFVocabulary newVocab = new DFVocabulary();
+    public CountingVocabulary trimTail(int minInclusion) {
+        CountingVocabulary newVocab = new CountingVocabulary();
         newVocab.setNumDocs(numDocs);
         for(int i = 0; i < vocab.size(); i++) {
             if(docFreqVector[i] >= minInclusion) {
@@ -110,17 +147,20 @@ public class DFVocabulary extends Vocabulary {
                 newVocab.setDocFrequency(newIndex, docFreqVector[i]);
             }
         }
+        if(frozen) {
+            newVocab.freezeVocab();
+        }
         return newVocab;
     }
     
-    public static DFVocabulary read(File w) throws IOException {
+    public static CountingVocabulary read(File w) throws IOException {
         return read(new FileInputStream(w));
     }
     
-    public static DFVocabulary read(InputStream in) throws IOException {
+    public static CountingVocabulary read(InputStream in) throws IOException {
         ObjectInputStream stream = new ObjectInputStream(in);
         try {
-            return (DFVocabulary) stream.readObject();
+            return (CountingVocabulary) stream.readObject();
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Unable to deserialize vocabulary", e);
         }

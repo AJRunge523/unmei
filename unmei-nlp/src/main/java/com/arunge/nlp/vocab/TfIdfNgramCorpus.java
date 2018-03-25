@@ -177,9 +177,9 @@ public class TfIdfNgramCorpus extends Corpus {
         for(int i = 0; i < documents.size(); i++) {
             NGramCorpusDocument d = documents.get(i);
             if(type == TFType.LENGTH_NORM) {
-                d.buildLengthNormCountDoc();
+                d = d.buildLengthNormCountDoc();
             } else if(type == TFType.LOG_LENGTH_NORM) {
-                d.buildLogLengthNormCountDoc();
+                d = d.buildLogLengthNormCountDoc();
             }
             for(int o = 1; o <= d.getOrder(); o++) {
                 Map<Integer, Double> ngramCounts = d.getNgrams(o);
@@ -188,6 +188,7 @@ public class TfIdfNgramCorpus extends Corpus {
                     d.setNgramCount(key, o, tfidf);
                 }
             }
+            documents.set(i, d);
         }
         return true;
     }

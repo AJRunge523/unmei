@@ -16,7 +16,7 @@ import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.NGramCorpusDocument;
 import com.arunge.nlp.api.Vocabulary;
 import com.arunge.nlp.vocab.DFNGramIndexer;
-import com.arunge.nlp.vocab.DFVocabulary;
+import com.arunge.nlp.vocab.CountingVocabulary;
 import com.arunge.nlp.vocab.TfIdfNgramCorpus;
 
 import weka.classifiers.Classifier;
@@ -251,7 +251,7 @@ public class WekaCorpusModelBuilder {
     }
     
     private Instances buildInstancesFromWordCorpus() throws IOException {
-        Vocabulary v = DFVocabulary.read(vocabFile);
+        Vocabulary v = CountingVocabulary.read(vocabFile);
         ArrayList<Attribute> attributes = WekaCorpusConverters.createVocabAttributes(v);
         LOG.info("Finished loading vocabulary with {} entries.", v.getVocabWords().size());
         Map<String, Integer> attrIndices = new HashMap<>();

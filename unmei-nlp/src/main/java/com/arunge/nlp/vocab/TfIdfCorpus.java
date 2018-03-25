@@ -29,7 +29,7 @@ public class TfIdfCorpus extends Corpus {
     private static final long serialVersionUID = 8821097798507813708L;
 
     // Vocabulary should be serialized separately
-    protected transient DFVocabulary vocab;
+    protected transient CountingVocabulary vocab;
     private TFType type;
     protected List<CorpusDocument> documents;
     
@@ -39,7 +39,7 @@ public class TfIdfCorpus extends Corpus {
     
     public TfIdfCorpus(TFType type) { 
         super();
-        this.vocab = new DFVocabulary();
+        this.vocab = new CountingVocabulary();
         this.type = type;
         this.documents = new ArrayList<>();
     }
@@ -103,21 +103,22 @@ public class TfIdfCorpus extends Corpus {
         for(int i = 0; i < documents.size(); i++) {
             CorpusDocument d = documents.get(i);
             if(type == TFType.LENGTH_NORM) {
-                d.buildLengthNormCountDoc();
+               d = d.buildLengthNormCountDoc();
             } else if(type == TFType.LOG_LENGTH_NORM) {
-                d.buildLogLengthNormCountDoc();
+                d = d.buildLogLengthNormCountDoc();
             }
             for(int w : d.getVocab().keySet()) {
                 double tfidf = d.getVocab().get(w) * idfCounts[w];
                 d.setWordCount(w, tfidf);
             }
+            documents.set(i, d);
         }
         return true;
     }
 
     @Override
     public void trimTail(int minInclusion) {
-       DFVocabulary newVocab = new DFVocabulary(vocab);
+       CountingVocabulary newVocab = new CountingVocabulary(vocab);
        newVocab = newVocab.trimTail(minInclusion);
         for(int i = 0; i < documents.size(); i++) {
             CorpusDocument d = documents.get(i);

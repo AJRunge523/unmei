@@ -17,7 +17,7 @@ public class DFNGramIndexer extends NGramIndexer {
     
     public DFNGramIndexer(int order) {
         super(order);
-        this.vocabulary = new DFVocabulary();
+        this.vocabulary = new CountingVocabulary();
         this.docFreqVectors = new int[order - 1][10];
     }
 
@@ -25,7 +25,7 @@ public class DFNGramIndexer extends NGramIndexer {
         DFNGramIndexer copy = new DFNGramIndexer(docFreqVectors.length + 1);
         copy.setNumDocs(getNumDocs());
         
-        DFVocabulary currentVocab = (DFVocabulary) vocabulary;
+        CountingVocabulary currentVocab = (CountingVocabulary) vocabulary;
         copy.vocabulary = currentVocab.trimTail(minInclusion);
         
         //Add all n-grams whose counts are above the threshold to the new indexer - maps these
@@ -71,7 +71,7 @@ public class DFNGramIndexer extends NGramIndexer {
         }
         
         if(order == 1) {
-            ((DFVocabulary) vocabulary).incrementDocFrequency(index);
+            ((CountingVocabulary) vocabulary).incrementDocFrequency(index);
         } else if(index >= indexes2Keys[order - 2].length) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
         } else {
@@ -84,7 +84,7 @@ public class DFNGramIndexer extends NGramIndexer {
             throw new UnsupportedOperationException("Invalid order: " + order + ", Maximum supported order: " + (indexes2Keys.length + 1));
         }
         if(order == 1) {
-            ((DFVocabulary) vocabulary).setDocFrequency(index, frequency);
+            ((CountingVocabulary) vocabulary).setDocFrequency(index, frequency);
         } else if(index >= indexes2Keys[order - 2].length) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
         } else {
@@ -97,7 +97,7 @@ public class DFNGramIndexer extends NGramIndexer {
             throw new UnsupportedOperationException("Invalid order: " + order + ", Maximum supported order: " + (indexes2Keys.length + 1));
         }
         if(order == 1) {
-            return((DFVocabulary) vocabulary).getDocFrequency(index);
+            return((CountingVocabulary) vocabulary).getDocFrequency(index);
         } else if(index >= indexes2Keys[order - 2].length) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
         } else {
@@ -111,7 +111,7 @@ public class DFNGramIndexer extends NGramIndexer {
         if(numDocs == 0) {
             return new double[docFreqVectors.length][];
         }
-        DFVocabulary vocab = (DFVocabulary) vocabulary;
+        CountingVocabulary vocab = (CountingVocabulary) vocabulary;
         double[][] idfVectors = new double[docFreqVectors.length + 1][];
         idfVectors[0] = vocab.computeIDFVector();
         for(int o = 0; o < docFreqVectors.length; o++) {
@@ -132,15 +132,15 @@ public class DFNGramIndexer extends NGramIndexer {
     }
     
     public int getNumDocs() {
-        return ((DFVocabulary) vocabulary).getNumDocs();
+        return ((CountingVocabulary) vocabulary).getNumDocs();
     }
 
     public void setNumDocs(int numDocs) {
-        ((DFVocabulary) vocabulary).setNumDocs(numDocs);
+        ((CountingVocabulary) vocabulary).setNumDocs(numDocs);
     }
     
     public void incrementNumDocs() {
-        ((DFVocabulary) vocabulary).incrementNumDocs();
+        ((CountingVocabulary) vocabulary).incrementNumDocs();
     }
     
     public static DFNGramIndexer read(InputStream in) throws IOException {

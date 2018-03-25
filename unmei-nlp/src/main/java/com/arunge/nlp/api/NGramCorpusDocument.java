@@ -1,5 +1,6 @@
 package com.arunge.nlp.api;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
@@ -21,6 +22,12 @@ public class NGramCorpusDocument extends CorpusDocument {
         // TODO Auto-generated constructor stub
     }
 
+    public NGramCorpusDocument(NGramCorpusDocument copy) { 
+        super(copy);
+        copy.docNgrams = Arrays.copyOf(docNgrams, docNgrams.length);
+        copy.ngramLengths = Arrays.copyOf(this.ngramLengths, this.ngramLengths.length);
+    }
+    
     public boolean addOrIncrementNgram(int ngramIndex, int order) {
         return addOrIncrementNgram(ngramIndex, order, 1.0);
     }
@@ -80,21 +87,24 @@ public class NGramCorpusDocument extends CorpusDocument {
     }
     
     @Override
-    public void buildLengthNormCountDoc() { 
+    public NGramCorpusDocument buildLengthNormCountDoc() { 
+        NGramCorpusDocument copy = new NGramCorpusDocument(this);
         super.buildLengthNormCountDoc();
         for(int i = 0; i < docNgrams.length; i++) {
             int index = i;
-            docNgrams[i].replaceAll((key, value) -> value / ngramLengths[index]);
+            copy.docNgrams[i].replaceAll((key, value) -> value / ngramLengths[index]);
         }
+        return copy;
     }
     
     @Override
-    public void buildLogLengthNormCountDoc() { 
-        super.buildLogLengthNormCountDoc();
+    public NGramCorpusDocument buildLogLengthNormCountDoc() { 
+        NGramCorpusDocument copy = new NGramCorpusDocument(this);
         for(int i = 0; i < docNgrams.length; i++) {
             int index = i;
-            docNgrams[i].replaceAll((key, value) -> 1 + Math.log(value / ngramLengths[index]));
+            copy.docNgrams[i].replaceAll((key, value) -> 1 + Math.log(value / ngramLengths[index]));
         }
+        return copy;
     }
     
 }

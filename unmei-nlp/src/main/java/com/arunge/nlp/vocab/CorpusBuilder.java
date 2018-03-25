@@ -57,7 +57,7 @@ public class CorpusBuilder {
         return new CorpusBuilder(new TfIdfCorpus(type));
     }
     
-    public static CorpusBuilder fixedTfIdfCorpusBuilder(DFVocabulary vocab) {
+    public static CorpusBuilder fixedTfIdfCorpusBuilder(CountingVocabulary vocab) {
         return new CorpusBuilder(new FixedVocabTfIdfCorpus(vocab));
     }
     
@@ -67,6 +67,10 @@ public class CorpusBuilder {
     
     public static CorpusBuilder ngramTfIdfCorpusBuilder(int order, TFType type) {
         return new CorpusBuilder(new TfIdfNgramCorpus(order, type));
+    }
+    
+    public static CorpusBuilder countingVocabCorpusBuilder() {
+        return new CorpusBuilder(new CountingCorpus());
     }
     
     public static CorpusBuilder fixedTfIdfNgramCorpusBuilder(File vocabFile, File corpusFile) {

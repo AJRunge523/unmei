@@ -22,21 +22,49 @@ public class Vocabulary extends StringIndexer {
 
     private static final long serialVersionUID = -9043467805009023608L;
     protected static String SEP = String.valueOf((char) 31);
+    protected boolean frozen;
     
     public Vocabulary() { 
         super();
+        this.frozen = false;
     }
     
     public Vocabulary(int initSize) {
         super(initSize);
+        this.frozen = false;
     }
     
     public Vocabulary(Vocabulary other) {
         super(other);
+        this.frozen = other.frozen;
+    }
+    
+    @Override
+    public int getOrAdd(String word) {
+        if(!vocab.containsKey(word)) {
+            if(frozen) {
+                return -1;
+            } else {
+                vocab.put(word, index2Word.size());
+                index2Word.add(word);
+            }
+        }
+        return vocab.get(word);
     }
     
     public List<String> getVocabWords() {
         return Collections.unmodifiableList(index2Word);
+    }
+    
+    public boolean isFrozen() {
+        return frozen;
+    }
+    
+    /**
+     * Freezes the contents of the vocabulary, allowing no other items to be added to it.
+     */
+    public void freezeVocab() {
+        this.frozen = true;
     }
     
     public void write(OutputStream out) throws IOException {
