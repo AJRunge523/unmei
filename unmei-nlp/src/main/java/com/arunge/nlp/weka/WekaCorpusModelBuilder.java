@@ -143,7 +143,7 @@ public class WekaCorpusModelBuilder {
         String[] options = null;
         switch(kernelType) {
         case LINEAR:
-            options = new String[] {"-S", "0", "-K", "0", "-D", "2", "-G", "0.0", "-R", "0.0", "-N", "0.5", "-M", "40.0", "-C", "1.0", "-E", "0.001", "-P", "0.1", "-B"};
+            options = new String[] {"-S", "0", "-K", "0", "-D", "2", "-G", "0.0", "-R", "0.0", "-N", "0.5", "-M", "40.0", "-C", "1000.0", "-E", "0.001", "-P", "0.1", "-B"};
             break;
         case POLYNOMIAL:
             options = new String[] {"-S", "0", "-K", "1", "-D", "2", "-G", "1", "-R", "0.0", "-N", "0.5", "-M", "40.0", "-C", "10000.0", "-E", "0.001", "-P", "0.1", "-B"};
