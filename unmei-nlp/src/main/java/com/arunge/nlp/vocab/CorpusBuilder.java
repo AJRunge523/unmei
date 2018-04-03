@@ -73,6 +73,10 @@ public class CorpusBuilder {
         return new CorpusBuilder(new CountingCorpus());
     }
     
+    public static CorpusBuilder countingVocabCorpusBuilder(CountingVocabulary vocab) {
+        return new CorpusBuilder(new CountingCorpus(vocab));
+    }
+    
     public static CorpusBuilder fixedTfIdfNgramCorpusBuilder(File vocabFile, File corpusFile) {
         DFNGramIndexer vocab;
         try {

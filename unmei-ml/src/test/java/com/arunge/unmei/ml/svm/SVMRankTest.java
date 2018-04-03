@@ -37,9 +37,9 @@ public class SVMRankTest {
         Map<Integer, Double> inst1 = new HashMap<>();
         inst1.put(1, 0.7);
         inst1.put(2, 0.3);
-        inst1.put(4, 0.1);
+        inst1.put(4, 0.0000001);
         String instance1 = SVMRank.instanceToString(1, 2, inst1);
-        assertEquals(instance1, "2 qid:1 1:0.7 2:0.3 4:0.1");
+        assertEquals(instance1, "2 qid:1 1:0.7 2:0.3 4:0.0000001");
     }
         
     

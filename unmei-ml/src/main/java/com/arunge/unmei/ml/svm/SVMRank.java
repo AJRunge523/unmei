@@ -7,8 +7,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -78,14 +81,18 @@ public class SVMRank {
     }
 
     public static String instanceToString(int queryId, int rank, Map<Integer, Double> instance) {
+        DecimalFormat df = new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+        df.setMaximumFractionDigits(20);
         StringBuffer inst = new StringBuffer().append(rank + " ")
                 .append("qid:")
                 .append(queryId);
         instance.keySet().stream().sorted().forEach(index -> {
+//            System.out.println(instance.get(index));
             inst.append(" ")
                 .append(index)
                 .append(":")
-                .append(instance.get(index));
+                .append(df.format(instance.get(index)));
+            
         });
         return inst.toString();
         

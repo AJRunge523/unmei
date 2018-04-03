@@ -24,6 +24,12 @@ public class CountingCorpus extends Corpus{
         this.documents = new ArrayList<>();
     }
     
+    public CountingCorpus(CountingVocabulary vocabulary) {
+        this.vocabulary = vocabulary;
+        this.vocabulary.freezeVocab();
+        this.documents = new ArrayList<>();
+    }
+    
     @Override
     public int addTokenizedDocument(PreprocessedTextDocument doc) {
         CorpusDocument document = new CorpusDocument(doc.getDocId());

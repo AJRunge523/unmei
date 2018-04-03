@@ -56,6 +56,9 @@ public class CountingVocabulary extends Vocabulary {
     }
     
     public void incrementDocFrequency(int index) {
+        if(frozen) {
+            return;
+        }
         if(index >= index2Word.size()) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Word.size()));
         }
@@ -77,6 +80,9 @@ public class CountingVocabulary extends Vocabulary {
     }
     
     public void incrementWordFrequency(int index) {
+        if(frozen) {
+            return;
+        }
         if(index >= index2Word.size()) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Word.size()));
         }
