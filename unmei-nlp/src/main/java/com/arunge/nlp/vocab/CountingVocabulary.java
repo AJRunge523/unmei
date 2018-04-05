@@ -20,20 +20,21 @@ import com.arunge.nlp.api.Vocabulary;
 public class CountingVocabulary extends Vocabulary {
 
     private static final long serialVersionUID = 4216302255003553294L;
-    private int[] wordFreqVector;
+    private long[] wordFreqVector;
     private int[] docFreqVector;
     private int numDocs;
+    private int numTokens;
     
     public CountingVocabulary() {
         super();
         this.docFreqVector = new int[10];
-        this.wordFreqVector = new int[10];
+        this.wordFreqVector = new long[10];
     }
     
     public CountingVocabulary(int initSize) {
         super(initSize);
         this.docFreqVector = new int[initSize];
-        this.wordFreqVector = new int[initSize];
+        this.wordFreqVector = new long[initSize];
     }
     
     public CountingVocabulary(CountingVocabulary other) {
@@ -65,13 +66,6 @@ public class CountingVocabulary extends Vocabulary {
         docFreqVector[index] += 1;
     }
     
-    public void setDocFrequency(int index, int frequency) {
-        if(index >= index2Word.size()) {
-            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Word.size()));
-        }
-        docFreqVector[index] = frequency;
-    }
-    
     public int getDocFrequency(int index) {
         if(index >= index2Word.size()) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Word.size()));
@@ -86,19 +80,21 @@ public class CountingVocabulary extends Vocabulary {
         if(index >= index2Word.size()) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Word.size()));
         }
+        numTokens += 1;
         wordFreqVector[index] += 1;
     }
     
-    public void setWordFrequency(int index, int frequency) {
-        if(index >= index2Word.size()) {
+    public long getWordFrequency(int index) {
+        if(index >= index2Word.size() || index < 0) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Word.size()));
         }
-        wordFreqVector[index] = frequency;
+        return wordFreqVector[index];
     }
     
-    public int getWordFrequency(int index) {
-        if(index >= index2Word.size()) {
-            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Word.size()));
+    public long getWordFrequency(String word) { 
+        int index = getIndex(word);
+        if(index < 0) {
+            return 0;
         }
         return wordFreqVector[index];
     }
@@ -122,8 +118,12 @@ public class CountingVocabulary extends Vocabulary {
         return Arrays.copyOf(docFreqVector, docFreqVector.length);
     }
     
-    public int[] getWordFrequencies() {
+    public long[] getWordFrequencies() {
         return Arrays.copyOf(wordFreqVector, wordFreqVector.length);
+    }
+    
+    public int getNumTokens() {
+        return numTokens;
     }
     
     public int getNumDocs() {
@@ -150,7 +150,9 @@ public class CountingVocabulary extends Vocabulary {
         for(int i = 0; i < vocab.size(); i++) {
             if(docFreqVector[i] >= minInclusion) {
                 int newIndex = newVocab.getOrAdd(index2Word.get(i));
-                newVocab.setDocFrequency(newIndex, docFreqVector[i]);
+                newVocab.docFreqVector[newIndex] = docFreqVector[i];
+                newVocab.wordFreqVector[newIndex] = wordFreqVector[i];
+                newVocab.numTokens += wordFreqVector[i];
             }
         }
         if(frozen) {

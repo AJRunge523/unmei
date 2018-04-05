@@ -38,10 +38,14 @@ public class TestVocabularySerialization {
         vocab.getOrAdd("is");
         vocab.getOrAdd("a");
         vocab.getOrAdd("test");
-        vocab.setDocFrequency(0, 3);
-        vocab.setDocFrequency(1, 2);
-        vocab.setDocFrequency(2, 2);
-        vocab.setDocFrequency(3, 1);
+        for(int i = 0; i < 3; i++) {
+            vocab.incrementDocFrequency(0);    
+        }
+        for(int i = 0; i < 2; i++) {
+            vocab.incrementDocFrequency(1);
+            vocab.incrementDocFrequency(2);            
+        }
+        vocab.incrementDocFrequency(3);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         vocab.write(baos);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());

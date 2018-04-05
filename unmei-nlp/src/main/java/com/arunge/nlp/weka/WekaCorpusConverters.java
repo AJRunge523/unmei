@@ -11,7 +11,7 @@ import com.arunge.nlp.api.CorpusDocument;
 import com.arunge.nlp.api.NGramCorpusDocument;
 import com.arunge.nlp.api.NGramIndexer;
 import com.arunge.nlp.api.Vocabulary;
-import com.arunge.nlp.vocab.DFNGramIndexer;
+import com.arunge.nlp.vocab.CountingNGramIndexer;
 
 import weka.core.Attribute;
 import weka.core.Instance;
@@ -104,7 +104,7 @@ public class WekaCorpusConverters {
      * @param attributes Complete list of all attributes.
      * @return
      */
-    public static Instance convert(NGramCorpusDocument doc, int totalVocabAttrs, DFNGramIndexer indexer, 
+    public static Instance convert(NGramCorpusDocument doc, int totalVocabAttrs, CountingNGramIndexer indexer, 
             Map<Integer, ArrayList<Attribute>> vocabAttrIndices, List<Attribute> attributes, boolean includeId) { 
         double[] values = new double[attributes.size()];
 

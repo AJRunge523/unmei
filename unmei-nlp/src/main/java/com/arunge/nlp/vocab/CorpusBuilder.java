@@ -14,8 +14,8 @@ import com.arunge.ingest.TextSource;
 import com.arunge.nlp.api.Annotator;
 import com.arunge.nlp.api.Corpus;
 import com.arunge.nlp.api.FeatureExtractor;
-import com.arunge.nlp.api.TokenFilters;
 import com.arunge.nlp.api.TokenFilters.TokenFilter;
+import com.arunge.nlp.api.TokenSplitter;
 import com.arunge.nlp.api.Tokenizer;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
 import com.arunge.nlp.stanford.Tokenizers;
@@ -33,6 +33,8 @@ public class CorpusBuilder {
     
     private List<TokenFilter> tokenFilters;
     
+    private List<TokenSplitter> tokenSplitters;
+    
     private int minInclusion;
     
     private Corpus corpus;
@@ -42,6 +44,8 @@ public class CorpusBuilder {
     private StanfordNLPPreprocessingPipeline pipeline;
     
     private int processedDocs;
+    
+    private int trimEvery;
     
     private List<FeatureExtractor<PreprocessedTextDocument>> textFeatureExtractors;
     
@@ -77,10 +81,18 @@ public class CorpusBuilder {
         return new CorpusBuilder(new CountingCorpus(vocab));
     }
     
+    public static CorpusBuilder countingNGramCorpusBuilder(int order, boolean indexOnly) {
+        return new CorpusBuilder(new CountingNGramCorpus(order, indexOnly));
+    }
+    
+    public static CorpusBuilder countingNGramCorpusBuilder(CountingNGramIndexer vocab) {
+        return new CorpusBuilder(new CountingNGramCorpus(vocab));
+    }
+    
     public static CorpusBuilder fixedTfIdfNgramCorpusBuilder(File vocabFile, File corpusFile) {
-        DFNGramIndexer vocab;
+        CountingNGramIndexer vocab;
         try {
-            vocab = DFNGramIndexer.read(vocabFile);
+            vocab = CountingNGramIndexer.read(vocabFile);
         } catch (IOException e) {
             throw new RuntimeException("Unable to load ngram vocabulary from file " + vocabFile.getAbsolutePath(), e);
         }
@@ -96,26 +108,49 @@ public class CorpusBuilder {
         this.sources = new ArrayList<>();
         this.corpus = corpus;
         this.tokenizer = Tokenizers.getDefault();
-        this.tokenFilters = TokenFilters.getDefaultFilters();
+        this.tokenFilters = new ArrayList<>();
+        this.tokenSplitters = new ArrayList<>();
         this.textFeatureExtractors = new LinkedList<>();
+        this.trimEvery = -1;
     }
     
+    /**
+     * Specify the tokenizer to use.
+     * @param tokenizer
+     * @return
+     */
     public CorpusBuilder withTokenizer(Tokenizer tokenizer) { 
         this.tokenizer = tokenizer;
         return this;
     }
     
+    /**
+     * Set the {@link TextSource}s to be used for creating the corpus.
+     * Overwrites all previously added sources.
+     * @param textSources
+     * @return
+     */
     public CorpusBuilder withSources(Collection<TextSource> textSources) {
         this.sources = new ArrayList<>();
         this.sources.addAll(textSources);
         return this;
     }
     
+    /**
+     * Add a {@link TextSource} to be used for constructing the corpus.
+     * @param source
+     * @return
+     */
     public CorpusBuilder addSource(TextSource source) { 
         this.sources.add(source);
         return this;
     }
     
+    /**
+     * Add all of the provided {@link TextSource}s to be used for constructing the corpus.
+     * @param textSources
+     * @return
+     */
     public CorpusBuilder addSources(Collection<TextSource> textSources) { 
         this.sources.addAll(textSources);
         return this;
@@ -131,6 +166,21 @@ public class CorpusBuilder {
         return this;
     }
     
+    public CorpusBuilder withTokenFilters(List<TokenFilter> filters) {
+        this.tokenFilters.addAll(filters);
+        return this;
+    }
+    
+    public CorpusBuilder withTokenSplitter(TokenSplitter splitter) {
+        this.tokenSplitters.add(splitter);
+        return this;
+    }
+    
+    public CorpusBuilder withTokenSplitters(List<TokenSplitter> splitters) {
+        this.tokenSplitters.addAll(splitters);
+        return this;
+    }
+    
     public CorpusBuilder splitTokensByTextField(boolean splitTokens) {
         this.splitTokens = splitTokens;
         return this;
@@ -143,6 +193,11 @@ public class CorpusBuilder {
     
     public CorpusBuilder addTextFeatureExtractors(Collection<FeatureExtractor<PreprocessedTextDocument>> extractor) { 
         this.textFeatureExtractors.addAll(extractor);
+        return this;
+    }
+    
+    public CorpusBuilder trimEvery(int trimEveryDocs) {
+        this.trimEvery = trimEveryDocs;
         return this;
     }
     
@@ -164,6 +219,7 @@ public class CorpusBuilder {
         Annotator[] anns = annotators.stream().toArray(Annotator[]::new);
         this.pipeline = new StanfordNLPPreprocessingPipeline(anns);
         TextDocumentTokenizer docTokenizer = new TextDocumentTokenizer(tokenizer, tokenFilters, splitTokens);
+        docTokenizer.setTokenSplitters(this.tokenSplitters);
         for(TextSource source : sources) {
             source.getDocuments().forEach(d -> tokenizeAndAdd(docTokenizer, d));
             LOG.info("Finished processing text source");
@@ -182,6 +238,7 @@ public class CorpusBuilder {
      */
     private void tokenizeAndAdd(TextDocumentTokenizer docTokenizer, TextDocument doc) {
         PreprocessedTextDocument processed = pipeline.apply(doc);
+        processed = docTokenizer.splitTokens(processed);
         processed = docTokenizer.filter(processed);
         for(FeatureExtractor<PreprocessedTextDocument> extractor : textFeatureExtractors) { 
             processed.addFeatures(extractor.extractFeatures(processed));
@@ -190,6 +247,9 @@ public class CorpusBuilder {
         processedDocs += 1;
         if(processedDocs % 500 == 0) { 
             LOG.info("Processed {} documents. Vocabulary size: {}", processedDocs, corpus.getVocabulary().size());
+        }
+        if(trimEvery > 0 && processedDocs % trimEvery == 0) { 
+            corpus.trimTail(minInclusion);
         }
     }
     

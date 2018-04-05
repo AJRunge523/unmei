@@ -14,7 +14,7 @@ public class TestDFNgramIndexer {
 
     @Test
     public void testDocFrequencies() {
-        DFNGramIndexer indexer = new DFNGramIndexer(3);
+        CountingNGramIndexer indexer = new CountingNGramIndexer(3);
         int tri1 = indexer.getOrAdd("this", "is", "a");
         int tri2 = indexer.getOrAdd("is", "a", "test");
         indexer.incrementDocFrequency(tri1, 3);
@@ -28,7 +28,7 @@ public class TestDFNgramIndexer {
     
     @Test
     public void testResizing() {
-        DFNGramIndexer indexer = new DFNGramIndexer(3);
+        CountingNGramIndexer indexer = new CountingNGramIndexer(3);
         indexer.getOrAdd("a", "b", "c");
         indexer.getOrAdd("a", "b", "d");
         indexer.getOrAdd("a", "b", "e");
@@ -45,23 +45,29 @@ public class TestDFNgramIndexer {
     
     @Test
     public void testIDFVector() {
-        DFNGramIndexer indexer = new DFNGramIndexer(3);
+        CountingNGramIndexer indexer = new CountingNGramIndexer(3);
         int tri1 = indexer.getOrAdd("this", "is", "a");
         int tri2 = indexer.getOrAdd("is", "a", "test");
         int tri3 = indexer.getOrAdd("a", "test", "vocabulary");
-        indexer.setNumDocs(3);
-        indexer.setDocFrequency(tri1, 3, 3);
-        indexer.setDocFrequency(tri2, 3, 2);
-        indexer.setDocFrequency(tri3, 3, 1);
-        indexer.setDocFrequency(1, 2, 1);
-        indexer.setDocFrequency(2, 2, 1);
-        indexer.setDocFrequency(3, 2, 3);
-        indexer.setDocFrequency(4, 2, 2);
-        indexer.setDocFrequency(0, 1, 3);
-        indexer.setDocFrequency(1, 1, 2);
-        indexer.setDocFrequency(2, 1, 1);
-        indexer.setDocFrequency(3, 1, 2);
-        indexer.setDocFrequency(4, 1, 3);
+        for(int i =0; i < 3; i++) {
+            indexer.incrementNumDocs();
+        }
+        for(int i = 0; i < 3; i++) {
+            indexer.incrementDocFrequency(tri1, 3);
+            indexer.incrementDocFrequency(3, 2);
+            indexer.incrementDocFrequency(0, 1);
+            indexer.incrementDocFrequency(4, 1);
+        }
+        for(int i = 0; i < 2; i++) {
+            indexer.incrementDocFrequency(tri2, 3);
+            indexer.incrementDocFrequency(4, 2);
+            indexer.incrementDocFrequency(1, 1);
+            indexer.incrementDocFrequency(3, 1);
+        }
+        indexer.incrementDocFrequency(tri3, 3);
+        indexer.incrementDocFrequency(1, 2);
+        indexer.incrementDocFrequency(2, 2);
+        indexer.incrementDocFrequency(2, 1);
         double[][] idfVector = indexer.computeIDFVector();
         assertEquals(0.0, idfVector[0][0], 0.0001);
         assertEquals(Math.log(3.0/2), idfVector[0][1], 0.0001);
@@ -79,24 +85,47 @@ public class TestDFNgramIndexer {
     
     @Test
     public void testTrimTail() {
-        DFNGramIndexer indexer = new DFNGramIndexer(3);
+        CountingNGramIndexer indexer = new CountingNGramIndexer(3);
         int tri1 = indexer.getOrAdd("this", "is", "a");
         int tri2 = indexer.getOrAdd("is", "a", "test");
         int tri3 = indexer.getOrAdd("a", "test", "vocabulary");
-        indexer.setNumDocs(3);
-        indexer.setDocFrequency(tri1, 3, 3);
-        indexer.setDocFrequency(tri2, 3, 2);
-        indexer.setDocFrequency(tri3, 3, 3);
-        indexer.setDocFrequency(1, 2, 1);
-        indexer.setDocFrequency(2, 2, 1);
-        indexer.setDocFrequency(3, 2, 3);
-        indexer.setDocFrequency(4, 2, 2);
-        indexer.setDocFrequency(0, 1, 3);
-        indexer.setDocFrequency(1, 1, 3);
-        indexer.setDocFrequency(2, 1, 3);
-        indexer.setDocFrequency(3, 1, 3);
-        indexer.setDocFrequency(4, 1, 3);
-        DFNGramIndexer newIndexer = indexer.trimTail(3);
+        for(int i =0; i < 3; i++) {
+            indexer.incrementNumDocs();
+        }        
+        for(int i = 0; i < 3; i++) {
+            indexer.incrementDocFrequency(tri1, 3);
+            indexer.incrementNgramFrequency(tri1, 3);
+            indexer.incrementDocFrequency(tri3, 3);
+            indexer.incrementNgramFrequency(tri3, 3);
+            indexer.incrementDocFrequency(3, 2);
+            indexer.incrementNgramFrequency(3, 2);
+            indexer.incrementDocFrequency(0, 1);
+            indexer.incrementNgramFrequency(0, 1);
+            indexer.incrementDocFrequency(1, 1);
+            indexer.incrementNgramFrequency(1, 1);
+            indexer.incrementDocFrequency(2, 1);
+            indexer.incrementNgramFrequency(2, 1);
+            indexer.incrementDocFrequency(3, 1);
+            indexer.incrementNgramFrequency(3, 1);
+            indexer.incrementDocFrequency(4, 1);
+            indexer.incrementNgramFrequency(4, 1);
+        }
+        for(int i = 0; i < 2; i++) {
+            indexer.incrementDocFrequency(tri2, 3);
+            indexer.incrementNgramFrequency(tri2, 3);
+            indexer.incrementDocFrequency(4, 2);
+            indexer.incrementNgramFrequency(4, 2);
+        }
+        indexer.incrementDocFrequency(1, 2);
+        indexer.incrementNgramFrequency(1, 2);
+        indexer.incrementDocFrequency(2, 2);
+        indexer.incrementNgramFrequency(2, 2);
+
+        assertEquals(indexer.getNumNgrams(1), 15);
+        assertEquals(indexer.getNumNgrams(2), 7);
+        assertEquals(indexer.getNumNgrams(3), 8);
+        
+        CountingNGramIndexer newIndexer = indexer.trimTail(3);
         assertEquals(5, newIndexer.size(1));
         assertEquals(1, newIndexer.size(2));
         assertEquals(2, newIndexer.size(3));
@@ -107,31 +136,48 @@ public class TestDFNgramIndexer {
         assertTrue(newIndexer.contains("this", "is", "a"));
         assertTrue(newIndexer.contains("a", "test", "vocabulary"));
         
+        assertEquals(newIndexer.getNumNgrams(1), 15);
+        assertEquals(newIndexer.getNgramFrequency(newIndexer.getIndex("this"), 1), 3);
+        assertEquals(newIndexer.getNgramFrequency(newIndexer.getIndex("is"), 1), 3);
+        assertEquals(newIndexer.getNgramFrequency(newIndexer.getIndex("a"), 1), 3);
+        assertEquals(newIndexer.getNgramFrequency(newIndexer.getIndex("test"), 1), 3);
+        assertEquals(newIndexer.getNgramFrequency(newIndexer.getIndex("vocabulary"), 1), 3);
+        assertEquals(newIndexer.getNumNgrams(2), 3);
+        assertEquals(newIndexer.getNgramFrequency(newIndexer.getIndex("a", "test"), 2), 3);
+        assertEquals(newIndexer.getNumNgrams(3), 6);
+        assertEquals(newIndexer.getNgramFrequency(newIndexer.getIndex("this", "is", "a"), 3), 3);
+        assertEquals(newIndexer.getNgramFrequency(newIndexer.getIndex("a", "test", "vocabulary"), 3), 3);
+        
     }
     
     @Test
     public void testSerialization() throws IOException { 
-        DFNGramIndexer indexer = new DFNGramIndexer(3);
+        CountingNGramIndexer indexer = new CountingNGramIndexer(3);
         int tri1 = indexer.getOrAdd("this", "is", "a");
         int tri2 = indexer.getOrAdd("is", "a", "test");
         int tri3 = indexer.getOrAdd("a", "test", "vocabulary");
-        indexer.setNumDocs(3);
-        indexer.setDocFrequency(tri1, 3, 3);
-        indexer.setDocFrequency(tri2, 3, 2);
-        indexer.setDocFrequency(tri3, 3, 1);
-        indexer.setDocFrequency(1, 2, 1);
-        indexer.setDocFrequency(2, 2, 1);
-        indexer.setDocFrequency(3, 2, 3);
-        indexer.setDocFrequency(4, 2, 2);
-        indexer.setDocFrequency(0, 1, 3);
-        indexer.setDocFrequency(1, 1, 3);
-        indexer.setDocFrequency(2, 1, 3);
-        indexer.setDocFrequency(3, 1, 3);
-        indexer.setDocFrequency(4, 1, 3);
+        for(int i =0; i < 3; i++) {
+            indexer.incrementNumDocs();
+        }        for(int i = 0; i < 3; i++) {
+            indexer.incrementDocFrequency(tri1, 3);
+            indexer.incrementDocFrequency(tri3, 3);
+            indexer.incrementDocFrequency(3, 2);
+            indexer.incrementDocFrequency(0, 1);
+            indexer.incrementDocFrequency(1, 1);
+            indexer.incrementDocFrequency(2, 1);
+            indexer.incrementDocFrequency(3, 1);
+            indexer.incrementDocFrequency(4, 1);
+        }
+        for(int i = 0; i < 2; i++) {
+            indexer.incrementDocFrequency(tri2, 3);
+            indexer.incrementDocFrequency(4, 2);
+        }
+        indexer.incrementDocFrequency(1, 2);
+        indexer.incrementDocFrequency(2, 2);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         indexer.write(baos);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        DFNGramIndexer deser = DFNGramIndexer.read(bais);
+        CountingNGramIndexer deser = CountingNGramIndexer.read(bais);
         assertEquals(indexer.getNumDocs(), deser.getNumDocs());
         assertEquals(indexer.size(1), deser.size(1));
         assertEquals(indexer.size(2), deser.size(2));

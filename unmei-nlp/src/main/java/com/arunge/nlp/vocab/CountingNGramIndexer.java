@@ -10,23 +10,28 @@ import java.util.Arrays;
 import com.arunge.nlp.api.NGramIndexer;
 import com.arunge.nlp.api.NgramKeyCompression;
 
-public class DFNGramIndexer extends NGramIndexer {
+public class CountingNGramIndexer extends NGramIndexer {
 
     private static final long serialVersionUID = 3798562177609286573L;
     private int[][] docFreqVectors;
+    private int[][] ngramFreqVectors;
+    private long[] numNgrams;
     
-    public DFNGramIndexer(int order) {
+    public CountingNGramIndexer(int order) {
         super(order);
         this.vocabulary = new CountingVocabulary();
         this.docFreqVectors = new int[order - 1][10];
+        this.ngramFreqVectors = new int[order - 1][10];
+        this.numNgrams = new long[order - 1];
     }
 
-    public DFNGramIndexer trimTail(int minInclusion) {
-        DFNGramIndexer copy = new DFNGramIndexer(docFreqVectors.length + 1);
+    public CountingNGramIndexer trimTail(int minInclusion) {
+        CountingNGramIndexer copy = new CountingNGramIndexer(docFreqVectors.length + 1);
         copy.setNumDocs(getNumDocs());
         
         CountingVocabulary currentVocab = (CountingVocabulary) vocabulary;
         copy.vocabulary = currentVocab.trimTail(minInclusion);
+        
         
         //Add all n-grams whose counts are above the threshold to the new indexer - maps these
         //n-grams to new indexes to shrink the amount of space needed for storage.
@@ -37,12 +42,15 @@ public class DFNGramIndexer extends NGramIndexer {
                     //Get the original ngram and add it to the new indexer
                     String[] ngram = getNgram(i, o);
                     int index = copy.getOrAdd(false, ngram);
-                    copy.setDocFrequency(index, o, docFreqVectors[o - 2][i]);
+                    copy.docFreqVectors[o - 2][index] = docFreqVectors[o - 2][i];//setDocFrequency(index, o, docFreqVectors[o - 2][i]);
+                    copy.ngramFreqVectors[o - 2][index] = ngramFreqVectors[o - 2][i];
+                    copy.numNgrams[o - 2] += ngramFreqVectors[o - 2][i];
                 }
             }
         }
-        
-        
+        if(frozen) {
+            copy.freezeVocab();
+        }
         return copy;
     }
     
@@ -57,6 +65,7 @@ public class DFNGramIndexer extends NGramIndexer {
             if(index >= index2Keys.length) {
                 indexes2Keys[order - 2] = Arrays.copyOf(index2Keys, (int) (index2Keys.length * 3.0/2));
                 docFreqVectors[order - 2] = Arrays.copyOf(docFreqVectors[order - 2], (int) (docFreqVectors[order - 2].length * 3.0/2));
+                ngramFreqVectors[order - 2] = Arrays.copyOf(ngramFreqVectors[order - 2], (int) (ngramFreqVectors[order - 2].length * 3.0/2));
             }
             indexes2Keys[order - 2][index] = ngramKey;
         }
@@ -66,10 +75,7 @@ public class DFNGramIndexer extends NGramIndexer {
     
     
     public void incrementDocFrequency(int index, int order) {
-        if(order < 1 || order > indexes2Keys.length + 1) {
-            throw new UnsupportedOperationException("Invalid order: " + order + ", Maximum supported order: " + (indexes2Keys.length + 1));
-        }
-        
+        validateOrder(order);
         if(order == 1) {
             ((CountingVocabulary) vocabulary).incrementDocFrequency(index);
         } else if(index >= indexes2Keys[order - 2].length) {
@@ -79,23 +85,8 @@ public class DFNGramIndexer extends NGramIndexer {
         }
     }
     
-    public void setDocFrequency(int index, int order, int frequency) {
-        if(order < 1 || order > indexes2Keys.length + 1) {
-            throw new UnsupportedOperationException("Invalid order: " + order + ", Maximum supported order: " + (indexes2Keys.length + 1));
-        }
-        if(order == 1) {
-            ((CountingVocabulary) vocabulary).setDocFrequency(index, frequency);
-        } else if(index >= indexes2Keys[order - 2].length) {
-            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
-        } else {
-            docFreqVectors[order - 2][index] = frequency;
-        }
-    }
-    
     public int getDocFrequency(int index, int order) {
-        if(order < 1 || order > indexes2Keys.length + 1) {
-            throw new UnsupportedOperationException("Invalid order: " + order + ", Maximum supported order: " + (indexes2Keys.length + 1));
-        }
+        validateOrder(order);
         if(order == 1) {
             return((CountingVocabulary) vocabulary).getDocFrequency(index);
         } else if(index >= indexes2Keys[order - 2].length) {
@@ -135,24 +126,93 @@ public class DFNGramIndexer extends NGramIndexer {
         return ((CountingVocabulary) vocabulary).getNumDocs();
     }
 
-    public void setNumDocs(int numDocs) {
-        ((CountingVocabulary) vocabulary).setNumDocs(numDocs);
-    }
-    
     public void incrementNumDocs() {
         ((CountingVocabulary) vocabulary).incrementNumDocs();
     }
     
-    public static DFNGramIndexer read(InputStream in) throws IOException {
-      ObjectInputStream stream = new ObjectInputStream(in);
-      try {
-          return (DFNGramIndexer) stream.readObject();
-      } catch (ClassNotFoundException e) {
-          throw new RuntimeException("Unable to deserialize vocabulary", e);
-      }
-  }
-  
-  public static DFNGramIndexer read(File f) throws IOException {
-      return read(new FileInputStream(f));
-  }
+    /**
+     * Private method for managing number of docs in the vocab when copying/trimming the vocabulary.
+     * @param numDocs
+     */
+    private void setNumDocs(int numDocs) {
+        ((CountingVocabulary) vocabulary).setNumDocs(numDocs);
+    }
+    
+    /**
+     * Increment the frequency of the ngram with the provided index and order. If the vocabulary is frozen,
+     * this is a no-op. 
+     * @param index
+     */
+    public void incrementNgramFrequency(int index, int order) {
+        validateOrder(order);
+        if(frozen) {
+            return;
+        }
+        if(order == 1) {
+            ((CountingVocabulary) vocabulary).incrementWordFrequency(index); 
+        } else if(index >= indexes2Keys[order - 2].length) {
+            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
+        } else {
+            numNgrams[order - 2]++;
+            ngramFreqVectors[order - 2][index]++;
+        }
+    }
+       
+    public long getNgramFrequency(int index, int order) {
+        validateOrder(order);
+        if(order == 1) {
+            return ((CountingVocabulary) vocabulary).getWordFrequency(index);
+        } else if(index>= indexes2Keys[order - 2].length) {
+            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
+        } else {
+            return ngramFreqVectors[order - 2][index]++;
+        }
+    }
+    
+    public long getNgramFrequency(String...ngram) {
+        int order = ngram.length;
+        validateOrder(order);
+        if(order == 1) {
+            return ((CountingVocabulary) vocabulary).getWordFrequency(ngram[0]);
+        } else {
+            int index = getIndex(ngram);
+            if(index == -1) {
+                return 0;
+            }
+            return ngramFreqVectors[order - 2][index];
+        }
+        
+    }
+    
+    /**
+     * Return the number of ngram tokens indexed by the vocabulary.
+     * @param order
+     * @return
+     */
+    public long getNumNgrams(int order) {
+        validateOrder(order);
+        if(order == 1) {
+            return ((CountingVocabulary) vocabulary).getNumTokens();
+        }
+        return numNgrams[order - 2];
+    }
+    
+    private void validateOrder(int order) {
+        if(order < 1 || order > indexes2Keys.length + 1) {
+            throw new UnsupportedOperationException("Invalid order: " + order + ", Maximum supported order: " + (indexes2Keys.length + 1));
+        }
+    }
+
+    public static CountingNGramIndexer read(InputStream in) throws IOException {
+        ObjectInputStream stream = new ObjectInputStream(in);
+        try {
+            return (CountingNGramIndexer) stream.readObject();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Unable to deserialize vocabulary", e);
+        }
+    }
+
+    public static CountingNGramIndexer read(File f) throws IOException {
+        return read(new FileInputStream(f));
+    }
 }

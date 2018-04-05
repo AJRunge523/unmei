@@ -7,11 +7,8 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Map.Entry;
 
 import com.arunge.nlp.api.AnnotatedToken;
 import com.arunge.nlp.api.Annotator;
@@ -24,26 +21,40 @@ import com.arunge.nlp.api.Vocabulary;
 import com.arunge.nlp.text.PreprocessedTextDocument;
 import com.arunge.nlp.text.PreprocessedTextField;
 
-public class TfIdfNgramCorpus extends Corpus {
+public class CountingNGramCorpus extends Corpus {
 
-    private static Logger LOG = LoggerFactory.getLogger(TfIdfNgramCorpus.class);
-    
     private static final long serialVersionUID = 8848756745985384534L;
     protected List<NGramCorpusDocument> documents;
     protected transient CountingNGramIndexer indexer;
-    protected TFType type;
     protected int order;
+    private boolean indexOnly;
     
-    public TfIdfNgramCorpus(int ngramOrder) {
-        this(ngramOrder, TFType.LENGTH_NORM);
+    public CountingNGramCorpus(int ngramOrder) {
+        this(ngramOrder, false);
     }
     
-    public TfIdfNgramCorpus(int ngramOrder, TFType type) { 
+    public CountingNGramCorpus(int ngramOrder, boolean indexOnly) { 
         super();
         this.indexer = new CountingNGramIndexer(ngramOrder);
-        this.type = type;
         this.order = ngramOrder;
         this.documents = new ArrayList<>();
+        this.indexOnly = indexOnly;
+    }
+    
+    public CountingNGramCorpus(CountingNGramIndexer indexer) {
+        this.indexer = indexer;
+        this.order = indexer.getOrder();
+        this.documents = new ArrayList<>();
+        this.indexOnly = false;
+    }
+    
+    /**
+     * Set the corpus to only index the words in the documents without storing the documents or contents.
+     * @param indexOnly
+     * @return
+     */
+    public void indexOnly(boolean indexOnly) {
+        this.indexOnly = indexOnly;
     }
     
     @Override
@@ -60,8 +71,8 @@ public class TfIdfNgramCorpus extends Corpus {
                 for(int i = 0; i < tokens.size(); i++) {
                     AnnotatedToken tok = tokens.get(i);
                     String tokStr = getTokenString(tok);
-                    
                     int uniIndex = indexer.getOrAdd(tokStr);
+                    indexer.incrementNgramFrequency(uniIndex, 1);
                     boolean added = document.addOrIncrementWord(uniIndex, 1);
                     if(added) {
                         indexer.incrementDocFrequency(uniIndex, 1);
@@ -70,6 +81,7 @@ public class TfIdfNgramCorpus extends Corpus {
                         int biIndex = indexer.getOrAdd(getTokenString(tokens.get(i - 1)), 
                                 tokStr);
                         added = document.addOrIncrementNgram(biIndex, 2);
+                        indexer.incrementNgramFrequency(biIndex, 2);
                         if(added) {
                             indexer.incrementDocFrequency(biIndex, 2);
                         }
@@ -78,6 +90,7 @@ public class TfIdfNgramCorpus extends Corpus {
                         int triIndex = indexer.getOrAdd(getTokenString(tokens.get(i - 2)), 
                                 getTokenString(tokens.get(i - 1)),
                                 tokStr);
+                        indexer.incrementNgramFrequency(triIndex, 3);
                         added = document.addOrIncrementNgram(triIndex, 3);
                         if(added) {
                             indexer.incrementDocFrequency(triIndex, 3);
@@ -91,7 +104,9 @@ public class TfIdfNgramCorpus extends Corpus {
             document.addFeature(featIndex, feat.getValue());
         }
         indexer.incrementNumDocs();
-        this.documents.add(document);
+        if(!indexOnly) {
+            this.documents.add(document);
+        }
         this.classLabels.add(label);
         return documents.size() - 1;
     }
@@ -129,6 +144,17 @@ public class TfIdfNgramCorpus extends Corpus {
     }
     
     @Override
+    public void export(String outputPath, String fileName) throws IOException {
+        if(!finalized) {
+            finalize();
+        }
+        indexer.write(new File(outputPath + "\\" + fileName + ".vocab"));
+        try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File(outputPath + "\\" + fileName + ".corpus")))) {
+            out.writeObject(this);
+        }
+    }
+
+    @Override
     public void trimTail(int minInclusion) {
         CountingNGramIndexer newIndexer = indexer.trimTail(minInclusion);
         for(int i = 0; i < documents.size(); i++) {
@@ -164,45 +190,4 @@ public class TfIdfNgramCorpus extends Corpus {
         }
         this.indexer = newIndexer;
     }
-    
-    @Override
-    public void finalize() {
-        super.finalize();
-        computeTfIdfCounts();
-    }
-    
-    private boolean computeTfIdfCounts() {
-        LOG.info("COMPUTING TFIDF COUNTS");
-        double[][] idfCounts = indexer.computeIDFVector();
-        for(int i = 0; i < documents.size(); i++) {
-            NGramCorpusDocument d = documents.get(i);
-            if(type == TFType.LENGTH_NORM) {
-                d = d.buildLengthNormCountDoc();
-            } else if(type == TFType.LOG_LENGTH_NORM) {
-                d = d.buildLogLengthNormCountDoc();
-            }
-            for(int o = 1; o <= d.getOrder(); o++) {
-                Map<Integer, Double> ngramCounts = d.getNgrams(o);
-                for(int key : ngramCounts.keySet()) {
-                    double tfidf = ngramCounts.get(key) * idfCounts[o - 1][key];
-                    d.setNgramCount(key, o, tfidf);
-                }
-            }
-            documents.set(i, d);
-        }
-        return true;
-    }
-    
-    @Override
-    public void export(String outputPath, String fileName) throws IOException {
-        if(!finalized) {
-            finalize();
-        }
-        indexer.write(new File(outputPath + "\\" + fileName + ".vocab"));
-        try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File(outputPath + "\\" + fileName + ".corpus")))) {
-            out.writeObject(this);
-        }
-        
-    }
-    
 }

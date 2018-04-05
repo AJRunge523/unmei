@@ -37,6 +37,7 @@ public class NGramIndexer implements Serializable {
     protected Long2IntOpenHashMap[] indexers;
     protected Vocabulary vocabulary;
     protected long[][] indexes2Keys;
+    protected boolean frozen;
     
     /**
      * Defines an NGramIndexer that will store n-grams up to the specified order
@@ -52,6 +53,7 @@ public class NGramIndexer implements Serializable {
         }
         this.vocabulary = new Vocabulary();
         this.indexes2Keys = new long[order - 1][10];
+        this.frozen = false;
     }
     
     public String[] getNgram(int index, int order) { 
@@ -144,6 +146,8 @@ public class NGramIndexer implements Serializable {
      * Adds an n-gram containing 1 <= n <= order words and returns an index that can be used for
      * retrieval. If the n-gram is already present in the indexer, the previously computed index
      * is returned instead.
+     * @param recursive - Whether or not to add lower order n-grams present in the provided ngram
+     * if they are missing from the indexer.
      * @param ngram
      * @return
      */
@@ -171,7 +175,7 @@ public class NGramIndexer implements Serializable {
         int order = to - from;
         long ngramKey = NgramKeyCompression.generateKey(indexedNgram, from, to);
         int index = indexers[order - 2].get(ngramKey);
-        if(index == 0) {
+        if(index == 0 && !frozen) {
             indexers[order - 2].put(ngramKey,  indexers[order - 2].size() + 1);
             index = indexers[order - 2].size();
             long[] index2Keys = indexes2Keys[order - 2];
@@ -179,8 +183,9 @@ public class NGramIndexer implements Serializable {
                 index2Keys = Arrays.copyOf(index2Keys, (int) (index2Keys.length * 3.0/2));
             }
             index2Keys[index] = ngramKey;
-        }
-        return index;
+            return index;
+        } 
+        return -1;
     }
     
     private int[] lookupIndexes(String[] words, boolean addIfMiss) {
@@ -202,6 +207,22 @@ public class NGramIndexer implements Serializable {
             words[i] = vocabulary.getWord(indexes[i]);
         }
         return words;
+    }
+    
+    /**
+     * 
+     * @return
+     */
+    public boolean isFrozen() {
+        return frozen;
+    }
+    
+    /**
+     * Freeze the contents of the vocabulary, preventing further items from being added.
+     */
+    public void freezeVocab() {
+        this.vocabulary.freezeVocab();
+        this.frozen = true;
     }
     
     public void write(OutputStream out) throws IOException {

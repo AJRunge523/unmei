@@ -24,8 +24,8 @@ public class NGramCorpusDocument extends CorpusDocument {
 
     public NGramCorpusDocument(NGramCorpusDocument copy) { 
         super(copy);
-        copy.docNgrams = Arrays.copyOf(docNgrams, docNgrams.length);
-        copy.ngramLengths = Arrays.copyOf(this.ngramLengths, this.ngramLengths.length);
+        this.docNgrams = Arrays.copyOf(copy.docNgrams, copy.docNgrams.length);
+        this.ngramLengths = Arrays.copyOf(copy.ngramLengths, copy.ngramLengths.length);
     }
     
     public boolean addOrIncrementNgram(int ngramIndex, int order) {

@@ -15,7 +15,7 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
 
     private static final long serialVersionUID = -4551507279092630221L;
 
-    public FixedTfIdfNgramCorpus(DFNGramIndexer ngramIndexer, FeatureIndexer featureIndexer) { 
+    public FixedTfIdfNgramCorpus(CountingNGramIndexer ngramIndexer, FeatureIndexer featureIndexer) { 
         super(ngramIndexer.getOrder());
         this.indexer = ngramIndexer;
         this.featureIndexer = featureIndexer;

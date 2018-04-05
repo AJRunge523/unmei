@@ -15,7 +15,7 @@ import com.arunge.nlp.api.CorpusDocument;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.NGramCorpusDocument;
 import com.arunge.nlp.api.Vocabulary;
-import com.arunge.nlp.vocab.DFNGramIndexer;
+import com.arunge.nlp.vocab.CountingNGramIndexer;
 import com.arunge.nlp.vocab.CountingVocabulary;
 import com.arunge.nlp.vocab.TfIdfNgramCorpus;
 
@@ -285,7 +285,7 @@ public class WekaCorpusModelBuilder {
     }
     
     private Instances buildInstancesFromNgramCorpus() throws IOException {
-        DFNGramIndexer indexer = DFNGramIndexer.read(vocabFile);
+        CountingNGramIndexer indexer = CountingNGramIndexer.read(vocabFile);
         Map<Integer, ArrayList<Attribute>> ngramAttrs = WekaCorpusConverters.createNgramVocabAttributes(indexer);
         ArrayList<Attribute> attributes = new ArrayList<>();
         for(int i = 1; i <= indexer.getOrder(); i++) {

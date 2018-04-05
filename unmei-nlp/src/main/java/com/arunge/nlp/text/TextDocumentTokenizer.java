@@ -1,6 +1,7 @@
 package com.arunge.nlp.text;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,6 +11,7 @@ import com.arunge.nlp.api.AnnotatedToken;
 import com.arunge.nlp.api.Token;
 import com.arunge.nlp.api.TokenFilters;
 import com.arunge.nlp.api.TokenFilters.TokenFilter;
+import com.arunge.nlp.api.TokenSplitter;
 import com.arunge.nlp.api.Tokenizer;
 import com.arunge.nlp.stanford.Tokenizers;
 import com.google.common.collect.Streams;
@@ -27,8 +29,11 @@ public class TextDocumentTokenizer {
 
     private Tokenizer tokenizer;
     private List<TokenFilter> tokenFilters;
+    private List<TokenSplitter> tokenSplitters;
     private boolean splitFields;
     private FilterOp filterOp;
+    
+    
     
     public enum FilterOp {
         REMOVE,
@@ -38,6 +43,7 @@ public class TextDocumentTokenizer {
     public TextDocumentTokenizer() {
         this.tokenizer = Tokenizers.getDefault();
         this.tokenFilters = TokenFilters.getDefaultFilters();
+        this.tokenSplitters = new ArrayList<>();
         this.splitFields = false;
         this.filterOp = FilterOp.REMOVE;
     }
@@ -59,6 +65,14 @@ public class TextDocumentTokenizer {
 
     public void addTokenFilter(TokenFilter filter) {
         this.tokenFilters.add(filter);
+    }
+
+    public void setTokenSplitters(List<TokenSplitter> tokenSplitters) {
+        this.tokenSplitters = tokenSplitters;
+    }
+    
+    public void addTokenSplitter(TokenSplitter splitter) { 
+        this.tokenSplitters.add(splitter);
     }
     
     public void setSplitFields(boolean splitFields) {
@@ -98,6 +112,26 @@ public class TextDocumentTokenizer {
             }
         }
         return tokens;
+    }
+    
+    public PreprocessedTextDocument splitTokens(PreprocessedTextDocument doc) {
+        for(String fieldName : doc.getTextFields().keySet()) {
+            PreprocessedTextField field = doc.getField(fieldName);
+            List<List<AnnotatedToken>> splitSentences = new ArrayList<>();
+            for(List<AnnotatedToken> sentence : field.getSentences()) {
+                Stream<AnnotatedToken> tokens = sentence.stream();
+                for(TokenSplitter splitter : tokenSplitters) { 
+                    tokens = tokens.flatMap(t -> { 
+                        Stream<Token> splitToks = splitter.apply(t);
+                        return splitToks.map(st -> new AnnotatedToken(st.text(), st.start(), st.end(), t.getAnnotations()));
+                    });
+                }
+                splitSentences.add(tokens.collect(Collectors.toList()));
+            }
+            PreprocessedTextField splitField = new PreprocessedTextField(splitSentences);
+            doc.addTextField(fieldName, splitField);
+        }
+        return doc;
     }
     
     public PreprocessedTextDocument filter(PreprocessedTextDocument doc) {

@@ -48,7 +48,6 @@ public class PreprocessedTextField {
     
     public String render(Annotator...annotators) {
         StringBuilder sb = new StringBuilder();
-        System.out.println(sentences.size());
         for(List<AnnotatedToken> sentence : sentences) { 
             String sent = sentence.stream().map(t -> t.render(annotators)).reduce((a, b) -> a + " " + b).get();
             sb.append(sent + "\n");

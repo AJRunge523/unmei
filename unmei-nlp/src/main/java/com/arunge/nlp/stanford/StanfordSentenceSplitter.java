@@ -28,12 +28,8 @@ public class StanfordSentenceSplitter implements SentenceSplitter {
             //Stanford labels are inclusive end
             Range r = new Range(first.beginPosition(), last.endPosition() + 1);
             sentences.add(r);
-            System.out.println(r);
             String sentenceString = SentenceUtils.listToOriginalTextString(sentence);
             sentenceList.add(sentenceString);
-        }
-        for (String sentence : sentenceList) {
-            System.out.println(sentence);
         }
         return sentences;
     }
