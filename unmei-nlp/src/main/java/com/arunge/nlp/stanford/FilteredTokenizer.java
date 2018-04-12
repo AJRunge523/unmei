@@ -5,8 +5,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.arunge.nlp.api.Token;
-import com.arunge.nlp.api.TokenFilters.TokenFilter;
 import com.arunge.nlp.api.Tokenizer;
+import com.arunge.nlp.tokenization.TokenFilters.TokenFilter;
 
 public class FilteredTokenizer implements Tokenizer {
 

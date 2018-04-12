@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.arunge.nlp.api.TokenFilters.TokenFilter;
+import com.arunge.nlp.tokenization.TokenFilters.TokenFilter;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 

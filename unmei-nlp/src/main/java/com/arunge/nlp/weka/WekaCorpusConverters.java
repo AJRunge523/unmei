@@ -6,11 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.arunge.nlp.api.Corpus;
-import com.arunge.nlp.api.CorpusDocument;
 import com.arunge.nlp.api.NGramCorpusDocument;
 import com.arunge.nlp.api.NGramIndexer;
 import com.arunge.nlp.api.Vocabulary;
+import com.arunge.nlp.vocab.Corpus;
+import com.arunge.nlp.vocab.CorpusDocument;
 import com.arunge.nlp.vocab.CountingNGramIndexer;
 
 import weka.core.Attribute;

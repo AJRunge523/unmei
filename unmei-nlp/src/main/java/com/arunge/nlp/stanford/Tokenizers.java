@@ -1,7 +1,7 @@
 package com.arunge.nlp.stanford;
 
-import com.arunge.nlp.api.TokenFilters;
 import com.arunge.nlp.api.Tokenizer;
+import com.arunge.nlp.tokenization.TokenFilters;
 
 public class Tokenizers {
 

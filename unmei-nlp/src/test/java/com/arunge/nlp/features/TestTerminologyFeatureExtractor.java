@@ -10,7 +10,7 @@ import com.arunge.nlp.api.Annotator;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.NLPPreprocessingPipeline;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
-import com.arunge.nlp.text.PreprocessedTextDocument;
+import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
 
 public class TestTerminologyFeatureExtractor {
@@ -19,7 +19,7 @@ public class TestTerminologyFeatureExtractor {
     public void testExtractor() {
         String text = "Neural networks are the future of all machine learning techniques";
         NLPPreprocessingPipeline pipeline = new StanfordNLPPreprocessingPipeline(Annotator.POS, Annotator.LEMMA);
-        PreprocessedTextDocument doc = pipeline.apply(new TextDocument("a", text));
+        AnnotatedTextDocument doc = pipeline.apply(new TextDocument("a", text));
         TerminologyFeatureExtractor extractor = new TerminologyFeatureExtractor("src/test/resources/ai_terminology.txt");
         Map<FeatureDescriptor, Double> features = extractor.extractFeatures(doc);
         assertEquals(features.get(FeatureDescriptor.of("term_machine_learning")).doubleValue(), 0.1, 0.0001);
@@ -35,7 +35,7 @@ public class TestTerminologyFeatureExtractor {
         TextDocument d = new TextDocument("a");
         d.setTextField("field1", field1);
         d.setTextField("field2", field2);
-        PreprocessedTextDocument doc = pipeline.apply(d);
+        AnnotatedTextDocument doc = pipeline.apply(d);
         TerminologyFeatureExtractor extractor = new TerminologyFeatureExtractor("src/test/resources/ai_terminology.txt");
         Map<FeatureDescriptor, Double> features = extractor.extractFeatures(doc);
         assertEquals(features.size(), 2);

@@ -97,6 +97,21 @@ public class CountingNGramIndexer extends NGramIndexer {
         
     }
     
+    public int getDocFrequency(String...ngram) {
+        int order = ngram.length;
+        validateOrder(order);
+        if(order == 1) {
+            
+            return (int) ((CountingVocabulary) vocabulary).getDocFrequency(ngram[0]);
+        } else {
+            int index = getIndex(ngram);
+            if(index == -1) {
+                return 0;
+            }
+            return docFreqVectors[order - 2][index];
+        }
+    }
+    
     public double[][] computeIDFVector() {
         int numDocs = getNumDocs();
         if(numDocs == 0) {
@@ -165,7 +180,7 @@ public class CountingNGramIndexer extends NGramIndexer {
         } else if(index>= indexes2Keys[order - 2].length) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
         } else {
-            return ngramFreqVectors[order - 2][index]++;
+            return ngramFreqVectors[order - 2][index];
         }
     }
     
@@ -173,6 +188,7 @@ public class CountingNGramIndexer extends NGramIndexer {
         int order = ngram.length;
         validateOrder(order);
         if(order == 1) {
+            
             return ((CountingVocabulary) vocabulary).getWordFrequency(ngram[0]);
         } else {
             int index = getIndex(ngram);

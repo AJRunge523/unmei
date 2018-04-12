@@ -1,4 +1,4 @@
-package com.arunge.nlp.api;
+package com.arunge.nlp.vocab;
 
 import java.io.Serializable;
 import java.util.Collections;

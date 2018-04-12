@@ -10,11 +10,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.arunge.nlp.api.Corpus;
-import com.arunge.nlp.api.CorpusDocument;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.NGramCorpusDocument;
 import com.arunge.nlp.api.Vocabulary;
+import com.arunge.nlp.vocab.Corpus;
+import com.arunge.nlp.vocab.CorpusDocument;
 import com.arunge.nlp.vocab.CountingNGramIndexer;
 import com.arunge.nlp.vocab.CountingVocabulary;
 import com.arunge.nlp.vocab.TfIdfNgramCorpus;

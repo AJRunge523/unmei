@@ -1,4 +1,4 @@
-package com.arunge.nlp.api;
+package com.arunge.nlp.tokenization;
 
 public class TokenSplitters {
 

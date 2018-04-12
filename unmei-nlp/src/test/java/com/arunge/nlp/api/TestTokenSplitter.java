@@ -7,6 +7,9 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
+import com.arunge.nlp.tokenization.TokenSplitter;
+import com.arunge.nlp.tokenization.TokenSplitters;
+
 public class TestTokenSplitter {
 
     @Test

@@ -14,13 +14,11 @@ import java.util.UUID;
 
 import org.junit.Test;
 
-import com.arunge.nlp.api.Corpus;
-import com.arunge.nlp.api.CorpusDocument;
 import com.arunge.nlp.api.NGramCorpusDocument;
 import com.arunge.nlp.api.NLPPreprocessingPipeline;
 import com.arunge.nlp.api.Vocabulary;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
-import com.arunge.nlp.text.PreprocessedTextDocument;
+import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
 
 public class TestTfidfNgramCorpus {
@@ -207,7 +205,7 @@ public class TestTfidfNgramCorpus {
      
     }
     
-    private PreprocessedTextDocument createDocument(String text) {
+    private AnnotatedTextDocument createDocument(String text) {
         TextDocument doc = new TextDocument(UUID.randomUUID().toString(), text);
         return pipeline.apply(doc);
     }

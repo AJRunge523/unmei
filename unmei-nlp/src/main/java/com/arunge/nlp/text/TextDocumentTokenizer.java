@@ -9,11 +9,11 @@ import java.util.stream.Stream;
 
 import com.arunge.nlp.api.AnnotatedToken;
 import com.arunge.nlp.api.Token;
-import com.arunge.nlp.api.TokenFilters;
-import com.arunge.nlp.api.TokenFilters.TokenFilter;
-import com.arunge.nlp.api.TokenSplitter;
 import com.arunge.nlp.api.Tokenizer;
 import com.arunge.nlp.stanford.Tokenizers;
+import com.arunge.nlp.tokenization.TokenFilters;
+import com.arunge.nlp.tokenization.TokenSplitter;
+import com.arunge.nlp.tokenization.TokenFilters.TokenFilter;
 import com.google.common.collect.Streams;
 
 /**
@@ -30,7 +30,6 @@ public class TextDocumentTokenizer {
     private Tokenizer tokenizer;
     private List<TokenFilter> tokenFilters;
     private List<TokenSplitter> tokenSplitters;
-    private boolean splitFields;
     private FilterOp filterOp;
     
     
@@ -44,14 +43,12 @@ public class TextDocumentTokenizer {
         this.tokenizer = Tokenizers.getDefault();
         this.tokenFilters = TokenFilters.getDefaultFilters();
         this.tokenSplitters = new ArrayList<>();
-        this.splitFields = false;
         this.filterOp = FilterOp.REMOVE;
     }
     
-    public TextDocumentTokenizer(Tokenizer tokenizer, List<TokenFilter> tokenFilters, boolean splitFields) {
+    public TextDocumentTokenizer(Tokenizer tokenizer, List<TokenFilter> tokenFilters) {
         this.tokenizer = tokenizer;
         this.tokenFilters = tokenFilters;
-        this.splitFields = splitFields;
         this.filterOp = FilterOp.REMOVE;
     }
 
@@ -75,10 +72,6 @@ public class TextDocumentTokenizer {
         this.tokenSplitters.add(splitter);
     }
     
-    public void setSplitFields(boolean splitFields) {
-        this.splitFields = splitFields;
-    }
-    
     /**
      * Specify whether filtering operations should remove the filtered tokens, or replace them with the <NULL> symbol.
      * @param operation
@@ -92,31 +85,31 @@ public class TextDocumentTokenizer {
      * @param doc
      * @return
      */
-    public Stream<Token> tokenize(TextDocument doc) {
-        Stream<Token> tokens = Stream.empty();
-        
-        //Annotate tokens with their field name
-        if(splitFields) {
-            Map<String, String> fields = doc.getTextFields();
-            for(Map.Entry<String, String> field : fields.entrySet()) {
-                Stream<Token> fieldTokens = tokenizer.tokenize(field.getValue());
-                for(TokenFilter filter : tokenFilters) {
-                    fieldTokens = fieldTokens.filter(filter);
-                }
-                tokens = Streams.concat(tokens, fieldTokens.map(t -> new Token(field.getKey() + "_" + t.text(), t.end(), t.start())));
-            }
-        } else {
-            tokens = tokenizer.tokenize(doc.getText());
-            for(TokenFilter filter : tokenFilters) {
-                tokens = tokens.filter(filter);
-            }
-        }
-        return tokens;
-    }
+//    public Stream<Token> tokenize(TextDocument doc) {
+//        Stream<Token> tokens = Stream.empty();
+//        
+//        //Annotate tokens with their field name
+//        if(splitFields) {
+//            Map<String, String> fields = doc.getTextFields();
+//            for(Map.Entry<String, String> field : fields.entrySet()) {
+//                Stream<Token> fieldTokens = tokenizer.tokenize(field.getValue());
+//                for(TokenFilter filter : tokenFilters) {
+//                    fieldTokens = fieldTokens.filter(filter);
+//                }
+//                tokens = Streams.concat(tokens, fieldTokens.map(t -> new Token(field.getKey() + "_" + t.text(), t.end(), t.start())));
+//            }
+//        } else {
+//            tokens = tokenizer.tokenize(doc.getText());
+//            for(TokenFilter filter : tokenFilters) {
+//                tokens = tokens.filter(filter);
+//            }
+//        }
+//        return tokens;
+//    }
     
-    public PreprocessedTextDocument splitTokens(PreprocessedTextDocument doc) {
+    public AnnotatedTextDocument splitTokens(AnnotatedTextDocument doc) {
         for(String fieldName : doc.getTextFields().keySet()) {
-            PreprocessedTextField field = doc.getField(fieldName);
+            AnnotatedTextField field = doc.getField(fieldName);
             List<List<AnnotatedToken>> splitSentences = new ArrayList<>();
             for(List<AnnotatedToken> sentence : field.getSentences()) {
                 Stream<AnnotatedToken> tokens = sentence.stream();
@@ -128,15 +121,15 @@ public class TextDocumentTokenizer {
                 }
                 splitSentences.add(tokens.collect(Collectors.toList()));
             }
-            PreprocessedTextField splitField = new PreprocessedTextField(splitSentences);
+            AnnotatedTextField splitField = new AnnotatedTextField(splitSentences);
             doc.addTextField(fieldName, splitField);
         }
         return doc;
     }
     
-    public PreprocessedTextDocument filter(PreprocessedTextDocument doc) {
+    public AnnotatedTextDocument filter(AnnotatedTextDocument doc) {
         for(String fieldName : doc.getTextFields().keySet()) {
-            PreprocessedTextField field = doc.getField(fieldName);
+            AnnotatedTextField field = doc.getField(fieldName);
             List<List<AnnotatedToken>> filteredSentences = new ArrayList<>();
             for(List<AnnotatedToken> sentence : field.getSentences()) {
                 Stream<AnnotatedToken> tokens = sentence.stream();
@@ -156,7 +149,7 @@ public class TextDocumentTokenizer {
                 }
                 filteredSentences.add(tokens.collect(Collectors.toList()));
             }
-            PreprocessedTextField filteredField = new PreprocessedTextField(filteredSentences);
+            AnnotatedTextField filteredField = new AnnotatedTextField(filteredSentences);
             doc.addTextField(fieldName, filteredField);
         }
         return doc;

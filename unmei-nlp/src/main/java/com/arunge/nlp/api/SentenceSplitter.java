@@ -4,8 +4,8 @@ import java.util.List;
 
 public interface SentenceSplitter {
 
-    public List<Range> split(String text);
+    public List<List<Token>> split(String text);
     
-    public List<Range> split(List<Token> tokens);
+    public List<List<Token>> split(List<Token> tokens);
     
 }

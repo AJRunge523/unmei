@@ -7,5 +7,6 @@ public enum Annotator {
     SEGMENT,
     NER,
     DEPPARSE,
+    STEM
     
 }

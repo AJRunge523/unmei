@@ -1,4 +1,4 @@
-package com.arunge.nlp.api;
+package com.arunge.nlp.tokenization;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -6,6 +6,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+
+import com.arunge.nlp.api.Token;
 
 public class TokenSplitter implements Function<Token, Stream<Token>>{
 

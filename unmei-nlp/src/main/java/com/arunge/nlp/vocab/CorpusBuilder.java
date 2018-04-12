@@ -12,16 +12,17 @@ import org.slf4j.LoggerFactory;
 
 import com.arunge.ingest.TextSource;
 import com.arunge.nlp.api.Annotator;
-import com.arunge.nlp.api.Corpus;
-import com.arunge.nlp.api.FeatureExtractor;
-import com.arunge.nlp.api.TokenFilters.TokenFilter;
-import com.arunge.nlp.api.TokenSplitter;
+import com.arunge.nlp.api.TokenForms;
 import com.arunge.nlp.api.Tokenizer;
+import com.arunge.nlp.features.FeatureExtractor;
+import com.arunge.nlp.processors.BasicNLPPreprocessingPipeline;
+import com.arunge.nlp.processors.PorterStemmerImpl;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
 import com.arunge.nlp.stanford.Tokenizers;
-import com.arunge.nlp.text.PreprocessedTextDocument;
+import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
-import com.arunge.nlp.text.TextDocumentTokenizer;
+import com.arunge.nlp.tokenization.TokenFilters.TokenFilter;
+import com.arunge.nlp.tokenization.TokenSplitter;
 
 public class CorpusBuilder {
 
@@ -39,15 +40,19 @@ public class CorpusBuilder {
     
     private Corpus corpus;
     
-    private boolean splitTokens;
-    
-    private StanfordNLPPreprocessingPipeline pipeline;
+    private BasicNLPPreprocessingPipeline pipeline;
     
     private int processedDocs;
     
     private int trimEvery;
     
-    private List<FeatureExtractor<PreprocessedTextDocument>> textFeatureExtractors;
+    private boolean lemmaTag;
+    
+    private boolean posTag;
+    
+    private boolean stemTag;
+    
+    private List<FeatureExtractor<AnnotatedTextDocument>> textFeatureExtractors;
     
     public static CorpusBuilder basicCorpusBuilder() {
         return new CorpusBuilder(new BasicCorpus());
@@ -181,23 +186,56 @@ public class CorpusBuilder {
         return this;
     }
     
-    public CorpusBuilder splitTokensByTextField(boolean splitTokens) {
-        this.splitTokens = splitTokens;
+    /**
+     * Indexes the lowercase forms of the tokens in all documents.
+     * @return
+     */
+    public CorpusBuilder withLowercaseTokenForms() { 
+        this.corpus.setTokenFormExtraction(TokenForms.lowercase());
         return this;
     }
     
-    public CorpusBuilder addTextFeatureExtractor(FeatureExtractor<PreprocessedTextDocument> extractor) { 
+    public CorpusBuilder withSplitFieldTokenForms() { 
+        this.corpus.setTokenFormExtraction(TokenForms.segmented());
+        return this;
+    }
+    
+    public CorpusBuilder withLemmaTokenForms() { 
+        this.corpus.setTokenFormExtraction(TokenForms.lemma());
+        this.posTag = true;
+        this.lemmaTag = true;
+        return this;
+    }
+    
+    public CorpusBuilder withStemTokenForms() {
+        this.corpus.setTokenFormExtraction(TokenForms.stem());
+        this.stemTag = true;
+        return this;
+    }
+    
+    public CorpusBuilder addTextFeatureExtractor(FeatureExtractor<AnnotatedTextDocument> extractor) { 
         this.textFeatureExtractors.add(extractor);
         return this;
     }
     
-    public CorpusBuilder addTextFeatureExtractors(Collection<FeatureExtractor<PreprocessedTextDocument>> extractor) { 
+    public CorpusBuilder addTextFeatureExtractors(Collection<FeatureExtractor<AnnotatedTextDocument>> extractor) { 
         this.textFeatureExtractors.addAll(extractor);
         return this;
     }
     
     public CorpusBuilder trimEvery(int trimEveryDocs) {
         this.trimEvery = trimEveryDocs;
+        return this;
+    }
+    
+    public CorpusBuilder addLemmas() {
+        this.posTag = true;
+        this.lemmaTag = true;
+        return this;
+    }
+    
+    public CorpusBuilder addPOSTags() { 
+        this.posTag = true;
         return this;
     }
     
@@ -211,17 +249,24 @@ public class CorpusBuilder {
             throw new UnsupportedOperationException("Cannot build a corpus without at least one TextSource.");
         }
         List<Annotator> annotators = new ArrayList<>();
-//        annotators.add(Annotator.POS);
-//        annotators.add(Annotator.LEMMA);
-        if(splitTokens) {
-            annotators.add(Annotator.SEGMENT);
+        if(posTag) {
+            annotators.add(Annotator.POS);
+        }
+        if(lemmaTag) { 
+            annotators.add(Annotator.LEMMA);
         }
         Annotator[] anns = annotators.stream().toArray(Annotator[]::new);
-        this.pipeline = new StanfordNLPPreprocessingPipeline(anns);
-        TextDocumentTokenizer docTokenizer = new TextDocumentTokenizer(tokenizer, tokenFilters, splitTokens);
-        docTokenizer.setTokenSplitters(this.tokenSplitters);
+        this.pipeline = new StanfordNLPPreprocessingPipeline(anns)
+                .withTokenFilters(tokenFilters)
+                .withTokenSplitters(tokenSplitters);
+        if(stemTag) { 
+            this.pipeline = pipeline.withStemmer(new PorterStemmerImpl());
+        }
+        
+//        TextDocumentTokenizer docTokenizer = new TextDocumentTokenizer(tokenizer, tokenFilters);
+//        docTokenizer.setTokenSplitters(this.tokenSplitters);
         for(TextSource source : sources) {
-            source.getDocuments().forEach(d -> tokenizeAndAdd(docTokenizer, d));
+            source.getDocuments().forEach(d -> tokenizeAndAdd(d));
             LOG.info("Finished processing text source");
         }
         if(minInclusion > 0) {
@@ -236,11 +281,11 @@ public class CorpusBuilder {
      * @param vocab
      * @param doc
      */
-    private void tokenizeAndAdd(TextDocumentTokenizer docTokenizer, TextDocument doc) {
-        PreprocessedTextDocument processed = pipeline.apply(doc);
-        processed = docTokenizer.splitTokens(processed);
-        processed = docTokenizer.filter(processed);
-        for(FeatureExtractor<PreprocessedTextDocument> extractor : textFeatureExtractors) { 
+    private void tokenizeAndAdd(TextDocument doc) {
+        AnnotatedTextDocument processed = pipeline.apply(doc);
+//        processed = docTokenizer.splitTokens(processed);
+//        processed = docTokenizer.filter(processed);
+        for(FeatureExtractor<AnnotatedTextDocument> extractor : textFeatureExtractors) { 
             processed.addFeatures(extractor.extractFeatures(processed));
         }
         corpus.addTokenizedDocument(processed);

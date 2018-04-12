@@ -13,15 +13,15 @@ import com.arunge.nlp.api.Annotator;
  * @author Andrew Runge
  *
  */
-public class PreprocessedTextField {
+public class AnnotatedTextField {
 
     private List<List<AnnotatedToken>> sentences;
     
-    public PreprocessedTextField() {
+    public AnnotatedTextField() {
         this.sentences = new ArrayList<>();
     }
 
-    public PreprocessedTextField(List<List<AnnotatedToken>> sentences) {
+    public AnnotatedTextField(List<List<AnnotatedToken>> sentences) {
         this.sentences = sentences;
     }
     

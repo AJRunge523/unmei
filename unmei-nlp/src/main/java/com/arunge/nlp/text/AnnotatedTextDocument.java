@@ -1,19 +1,21 @@
 package com.arunge.nlp.text;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.arunge.nlp.api.Annotator;
 import com.arunge.nlp.api.FeatureDescriptor;
 
-public class PreprocessedTextDocument {
+public class AnnotatedTextDocument {
 
     private String docId;
     private Optional<String> label;
-    private Map<String, PreprocessedTextField> textFields;
+    private Map<String, AnnotatedTextField> textFields;
     private Map<FeatureDescriptor, Double> features;
     
-    public PreprocessedTextDocument(String docId) { 
+    public AnnotatedTextDocument(String docId) { 
         this.docId = docId;
         this.label = Optional.empty();
         this.textFields = new HashMap<>();
@@ -24,7 +26,7 @@ public class PreprocessedTextDocument {
      * Create a new <code>PreprocessedTextDocument</code> using a TextDocument to fill in the id, label, and features.
      * @param doc
      */
-    public PreprocessedTextDocument(TextDocument doc) {
+    public AnnotatedTextDocument(TextDocument doc) {
         this.docId = doc.getId();
         this.label = doc.getLabel();
         if(doc instanceof FeatureTextDocument) {
@@ -51,15 +53,23 @@ public class PreprocessedTextDocument {
         this.label = Optional.of(label);
     }
 
-    public PreprocessedTextField getField(String fieldName) {
+    public AnnotatedTextField getDefaultField() { 
+        return textFields.get(TextDocument.DEFAULT_FIELD);
+    }
+    
+    public AnnotatedTextField getField(String fieldName) {
         return textFields.get(fieldName);
     }
     
-    public Map<String, PreprocessedTextField> getTextFields() {
+    public Map<String, AnnotatedTextField> getTextFields() {
         return textFields;
     }
 
-    public void addTextField(String fieldName, PreprocessedTextField field) {
+    public Collection<String> getFieldNames() {
+        return textFields.keySet();
+    }
+    
+    public void addTextField(String fieldName, AnnotatedTextField field) {
         this.textFields.put(fieldName, field);
     }
     
@@ -79,5 +89,18 @@ public class PreprocessedTextDocument {
         return textFields.values().stream().map(f -> f.getLength()).reduce(0, (a, b) -> a + b);
     }
     
+    @Override
+    public String toString() {
+        return render();
+    }
+    
+    public String render(Annotator...annotators) { 
+        StringBuilder sb = new StringBuilder();
+        for(String field : textFields.keySet()) {
+            sb.append(field + "=========================================================\n");
+            sb.append(textFields.get(field).render(annotators));
+        }
+        return sb.toString();
+    }
     
 }

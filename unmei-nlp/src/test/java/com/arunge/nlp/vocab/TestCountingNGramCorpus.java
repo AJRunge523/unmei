@@ -13,13 +13,11 @@ import java.util.UUID;
 
 import org.junit.Test;
 
-import com.arunge.nlp.api.Corpus;
-import com.arunge.nlp.api.CorpusDocument;
 import com.arunge.nlp.api.NGramCorpusDocument;
 import com.arunge.nlp.api.NLPPreprocessingPipeline;
 import com.arunge.nlp.api.Vocabulary;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
-import com.arunge.nlp.text.PreprocessedTextDocument;
+import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
 
 public class TestCountingNGramCorpus {
@@ -70,9 +68,10 @@ public class TestCountingNGramCorpus {
         assertTrue(docBigrams.containsKey(corpus.indexer.getIndex("buried", "the")));
 
         CountingNGramIndexer cng = (CountingNGramIndexer) corpus.getNgramIndexer();
-        assertThat(cng.getNgramFrequency(2, corpus.indexer.getIndex("the", "dog")), equalTo(2L));
-        assertThat(cng.getNgramFrequency(2, corpus.indexer.getIndex("the", "bone")), equalTo(2L));
-        assertThat(cng.getNgramFrequency(2, corpus.indexer.getIndex("picked", "up")), equalTo(1L));
+//        assertThat(cng.getNgramFrequency(2, corpus.indexer.getIndex("The", "dog")), equalTo(2L));
+        assertThat(cng.getNgramFrequency(corpus.indexer.getIndex("the", "dog"), 2), equalTo(2L));
+        assertThat(cng.getNgramFrequency(corpus.indexer.getIndex("the", "bone"), 2), equalTo(2L));
+        assertThat(cng.getNgramFrequency(corpus.indexer.getIndex("picked", "up"), 2), equalTo(1L));
         
     }
     
@@ -131,12 +130,16 @@ public class TestCountingNGramCorpus {
         assertThat(fetch(docC, v, "test"), equalTo(0.0));
         
         CountingNGramIndexer cng = (CountingNGramIndexer) corpus.getNgramIndexer();
-        assertThat(cng.getNgramFrequency(2, corpus.indexer.getIndex("this", "is")), equalTo(4L));
-        assertThat(cng.getNgramFrequency(1, corpus.indexer.getIndex("test")), equalTo(3L));
-        assertThat(cng.getNgramFrequency(1, corpus.indexer.getIndex("kind")), equalTo(2L));
-        assertThat(cng.getNgramFrequency(2, corpus.indexer.getIndex("the", "simple")), equalTo(1L));
+        assertThat(cng.getNgramFrequency(corpus.indexer.getIndex("this", "is"), 2), equalTo(4L));
+        assertThat(cng.getNgramFrequency(corpus.indexer.getIndex("test"), 1), equalTo(3L));
+        assertThat(cng.getNgramFrequency(corpus.indexer.getIndex("kind"), 1), equalTo(2L));
+        assertThat(cng.getNgramFrequency(corpus.indexer.getIndex("the", "simple"), 2), equalTo(1L));
+        assertThat(cng.getNgramFrequency("this", "is"), equalTo(4L));
+        assertThat(cng.getNgramFrequency("test"), equalTo(3L));
+        assertThat(cng.getNgramFrequency("kind"), equalTo(2L));
+        assertThat(cng.getNgramFrequency("the", "simple"), equalTo(1L));
         try {
-            assertThat(cng.getNgramFrequency(1, corpus.indexer.getIndex("wrong")), equalTo(0));
+            assertThat(cng.getNgramFrequency(corpus.indexer.getIndex("wrong"), 1), equalTo(0));
             fail();
         } catch (IndexOutOfBoundsException e) {
         }
@@ -175,7 +178,7 @@ public class TestCountingNGramCorpus {
                 
     }
     
-    private PreprocessedTextDocument createDocument(String text) {
+    private AnnotatedTextDocument createDocument(String text) {
         TextDocument doc = new TextDocument(UUID.randomUUID().toString(), text);
         return pipeline.apply(doc);
     }

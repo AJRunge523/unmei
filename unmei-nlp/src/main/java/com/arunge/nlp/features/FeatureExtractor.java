@@ -1,6 +1,8 @@
-package com.arunge.nlp.api;
+package com.arunge.nlp.features;
 
 import java.util.Map;
+
+import com.arunge.nlp.api.FeatureDescriptor;
 
 /**
  * 

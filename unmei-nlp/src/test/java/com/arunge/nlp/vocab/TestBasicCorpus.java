@@ -12,14 +12,12 @@ import java.util.UUID;
 
 import org.junit.Test;
 
-import com.arunge.nlp.api.Corpus;
-import com.arunge.nlp.api.CorpusDocument;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.FeatureWeightType;
 import com.arunge.nlp.api.NLPPreprocessingPipeline;
 import com.arunge.nlp.api.Vocabulary;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
-import com.arunge.nlp.text.PreprocessedTextDocument;
+import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
 
 public class TestBasicCorpus {
@@ -31,7 +29,7 @@ public class TestBasicCorpus {
         String a = "The dog picked up the bone. The dog then went and buried the bone.";
         Corpus corpus = new BasicCorpus();
         TextDocument doc = new TextDocument("a", a);
-        PreprocessedTextDocument preprocessed = pipeline.apply(doc);
+        AnnotatedTextDocument preprocessed = pipeline.apply(doc);
         corpus.addTokenizedDocument(preprocessed);        
         Vocabulary v = corpus.getVocabulary();
         assertThat(v.size(), equalTo(10));
@@ -88,11 +86,11 @@ public class TestBasicCorpus {
     @Test
     public void testFeatures() {
         Corpus corpus = new BasicCorpus();
-        PreprocessedTextDocument a = createDocument("This is a test");
+        AnnotatedTextDocument a = createDocument("This is a test");
         a.addFeature(FeatureDescriptor.of("constant"), 5.0);
-        PreprocessedTextDocument b = createDocument("This is another test");
+        AnnotatedTextDocument b = createDocument("This is another test");
         b.addFeature(new FeatureDescriptor("tfidf", FeatureWeightType.TFIDF), 3.0);
-        PreprocessedTextDocument c = createDocument("This is not a test");
+        AnnotatedTextDocument c = createDocument("This is not a test");
         c.addFeature(new FeatureDescriptor("tfidf", FeatureWeightType.TFIDF), 6.0);
         corpus.addTokenizedDocument(a);
         corpus.addTokenizedDocument(b);
@@ -112,7 +110,7 @@ public class TestBasicCorpus {
         
     }
     
-    private PreprocessedTextDocument createDocument(String text) {
+    private AnnotatedTextDocument createDocument(String text) {
         TextDocument doc = new TextDocument(UUID.randomUUID().toString(), text);
         return pipeline.apply(doc);
     }

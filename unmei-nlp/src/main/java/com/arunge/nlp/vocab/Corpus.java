@@ -1,4 +1,4 @@
-package com.arunge.nlp.api;
+package com.arunge.nlp.vocab;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,7 +15,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import com.arunge.nlp.text.PreprocessedTextDocument;
+import com.arunge.nlp.api.FeatureDescriptor;
+import com.arunge.nlp.api.FeatureIndexer;
+import com.arunge.nlp.api.FeatureWeightType;
+import com.arunge.nlp.api.TokenForms;
+import com.arunge.nlp.api.Vocabulary;
+import com.arunge.nlp.api.TokenForms.TokenForm;
+import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
 
 /**
@@ -36,30 +42,21 @@ public abstract class Corpus implements Iterable<CorpusDocument>, Serializable {
     protected Set<String> classLabels;
     protected boolean finalized;
     protected FeatureIndexer featureIndexer;
+    protected TokenForm tokenFormExtractor;
     
     
     public Corpus() {
         this.classLabels = new HashSet<>();
         this.featureIndexer = new FeatureIndexer();
+        this.tokenFormExtractor = TokenForms.lowercase();
     }
-    
-//    /**
-//     * Add a tokenized document with the specified ID to the corpus. Returns the numerical index of the document in the corpus.
-//     * @param docId
-//     * @param tokens
-//     * @return
-//     */
-//    public int addTokenizedDocument(String docId, List<Token> tokens) {
-//        PreprocessedTextDocument d = new PreprocessedTextDocument(docId);
-//        return addTokenizedDocument(new PreprocessedTextDocument(docId, ""), tokens);
-//    }
     
     /**
      * Add a tokenized document described by the provided {@link TextDocument} to the corpus and returns the numerical index of the document in the corpus.
      * @param docId
      * @param tokens
      */
-    public abstract int addTokenizedDocument(PreprocessedTextDocument doc);
+    public abstract int addTokenizedDocument(AnnotatedTextDocument doc);
     
     /**
      * Adds a feature to this corpus (if not already present) and returns an index for use in storing values of the feature.
@@ -79,6 +76,15 @@ public abstract class Corpus implements Iterable<CorpusDocument>, Serializable {
     }
     
     public abstract int size();
+    
+    /**
+     * Allows indexing the values of a particular annotation on the tokens of the document, rather than the raw text.
+     * The default value (null) indexes the raw text.
+     * @param lemmasOnly
+     */
+    public void setTokenFormExtraction(TokenForm tokenFormExtractor) {
+        this.tokenFormExtractor = tokenFormExtractor;
+    }
     
     /**
      * Returns the indexer for structured features in the corpus.

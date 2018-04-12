@@ -5,12 +5,10 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import com.arunge.nlp.api.AnnotatedToken;
-import com.arunge.nlp.api.Corpus;
-import com.arunge.nlp.api.CorpusDocument;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.Vocabulary;
-import com.arunge.nlp.text.PreprocessedTextDocument;
-import com.arunge.nlp.text.PreprocessedTextField;
+import com.arunge.nlp.text.AnnotatedTextDocument;
+import com.arunge.nlp.text.AnnotatedTextField;
 
 public class CountingCorpus extends Corpus{
 
@@ -31,15 +29,15 @@ public class CountingCorpus extends Corpus{
     }
     
     @Override
-    public int addTokenizedDocument(PreprocessedTextDocument doc) {
+    public int addTokenizedDocument(AnnotatedTextDocument doc) {
         CorpusDocument document = new CorpusDocument(doc.getDocId());
         String label = doc.getLabel().orElse("");
         document.setLabel(label);
         document.setLength(doc.getLength());
-        for(PreprocessedTextField field : doc.getTextFields().values()) {
+        for(AnnotatedTextField field : doc.getTextFields().values()) {
             for(List<AnnotatedToken> sentence : field.getSentences()) {
                 for(AnnotatedToken token : sentence) {
-                    int index = vocabulary.getOrAdd(token.text().toLowerCase());
+                    int index = vocabulary.getOrAdd(tokenFormExtractor.apply(token));
                     vocabulary.incrementWordFrequency(index);
                     boolean added = document.addOrIncrementWord(index);
                     if(added) {

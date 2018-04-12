@@ -8,8 +8,8 @@ import com.arunge.nlp.api.AnnotatedToken;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.FeatureIndexer;
 import com.arunge.nlp.api.NGramCorpusDocument;
-import com.arunge.nlp.text.PreprocessedTextDocument;
-import com.arunge.nlp.text.PreprocessedTextField;
+import com.arunge.nlp.text.AnnotatedTextDocument;
+import com.arunge.nlp.text.AnnotatedTextField;
 
 public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
 
@@ -22,7 +22,7 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
     }
     
     @Override
-    public int addTokenizedDocument(PreprocessedTextDocument doc) {
+    public int addTokenizedDocument(AnnotatedTextDocument doc) {
         if(finalized) {
             throw new UnsupportedOperationException("Cannot add additional documents to the corpus after tf-idf counts have been computed.");
         }
@@ -41,7 +41,7 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
      * @param tokens
      * @return
      */
-    public NGramCorpusDocument convert(PreprocessedTextDocument doc) { 
+    public NGramCorpusDocument convert(AnnotatedTextDocument doc) { 
         return convert(doc, true);
     }
     
@@ -53,15 +53,15 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
      * @param applyWeights
      * @return
      */
-    private NGramCorpusDocument convert(PreprocessedTextDocument doc, boolean applyWeights) {
+    private NGramCorpusDocument convert(AnnotatedTextDocument doc, boolean applyWeights) {
         NGramCorpusDocument document = new NGramCorpusDocument(doc.getDocId(), order);
         String label = doc.getLabel().orElse("");
         document.setLabel(label);
-        for(PreprocessedTextField field : doc.getTextFields().values()) {
+        for(AnnotatedTextField field : doc.getTextFields().values()) {
             for(List<AnnotatedToken> sentence : field.getSentences()) {
                 for(int i = 0; i < sentence.size(); i++) {
                     AnnotatedToken tok = sentence.get(i);
-                    String tokStr = getTokenString(tok);
+                    String tokStr = tokenFormExtractor.apply(tok);
                     int uniIndex = indexer.getIndex(tokStr);
                     if(uniIndex == -1) {
                         continue;
@@ -69,7 +69,7 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
                     document.addOrIncrementWord(uniIndex);
                     document.setLength(document.getLength() + 1);
                     if(order >= 2 && i >= 1) {
-                        int biIndex = indexer.getIndex(getTokenString(sentence.get(i - 1)), 
+                        int biIndex = indexer.getIndex(tokenFormExtractor.apply(sentence.get(i - 1)), 
                                 tokStr);
                         if(biIndex == -1) {
                             continue;
@@ -78,8 +78,8 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
                         document.setNgramLength(document.getNgramLength(2) + 1, 2);
                     }
                     if(order >= 3 && i >= 2) {
-                        int triIndex = indexer.getOrAdd(getTokenString(sentence.get(i - 2)), 
-                                getTokenString(sentence.get(i - 1)),
+                        int triIndex = indexer.getOrAdd(tokenFormExtractor.apply(sentence.get(i - 2)), 
+                                tokenFormExtractor.apply(sentence.get(i - 1)),
                                 tokStr);
                         if(triIndex == -1) {
                             continue;

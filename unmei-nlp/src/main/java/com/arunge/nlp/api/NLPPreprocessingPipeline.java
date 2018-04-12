@@ -1,6 +1,6 @@
 package com.arunge.nlp.api;
 
-import com.arunge.nlp.text.PreprocessedTextDocument;
+import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
 
 /**
@@ -12,6 +12,6 @@ import com.arunge.nlp.text.TextDocument;
  */
 public interface NLPPreprocessingPipeline {
 
-    PreprocessedTextDocument apply(TextDocument doc);
+    AnnotatedTextDocument apply(TextDocument doc);
  
 }

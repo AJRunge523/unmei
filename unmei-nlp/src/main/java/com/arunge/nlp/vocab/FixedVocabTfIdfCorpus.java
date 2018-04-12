@@ -4,11 +4,9 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import com.arunge.nlp.api.AnnotatedToken;
-import com.arunge.nlp.api.CorpusDocument;
 import com.arunge.nlp.api.FeatureDescriptor;
-import com.arunge.nlp.api.Token;
-import com.arunge.nlp.text.PreprocessedTextDocument;
-import com.arunge.nlp.text.PreprocessedTextField;
+import com.arunge.nlp.text.AnnotatedTextDocument;
+import com.arunge.nlp.text.AnnotatedTextField;
 
 /**
  * 
@@ -33,7 +31,7 @@ public class FixedVocabTfIdfCorpus extends TfIdfCorpus{
     }
     
     @Override
-    public int addTokenizedDocument(PreprocessedTextDocument doc) {
+    public int addTokenizedDocument(AnnotatedTextDocument doc) {
         if(finalized) {
             throw new UnsupportedOperationException("Cannot add additional documents to the corpus after tf-idf counts have been computed.");
         }
@@ -41,10 +39,10 @@ public class FixedVocabTfIdfCorpus extends TfIdfCorpus{
         String label = doc.getLabel().orElse("");
         document.setLabel(label);
         int length = 0;
-        for(PreprocessedTextField field : doc.getTextFields().values()) {
+        for(AnnotatedTextField field : doc.getTextFields().values()) {
             for(List<AnnotatedToken> sentence : field.getSentences()) {
-                for(Token t : sentence) {
-                    int index = vocab.getIndex(t.text());
+                for(AnnotatedToken t : sentence) {
+                    int index = vocab.getIndex(tokenFormExtractor.apply(t));
                     if(index == -1) {
                         continue;
                     }

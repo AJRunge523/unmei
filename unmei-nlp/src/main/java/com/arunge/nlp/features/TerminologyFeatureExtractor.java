@@ -16,12 +16,11 @@ import org.slf4j.LoggerFactory;
 import com.arunge.nlp.api.AnnotatedToken;
 import com.arunge.nlp.api.Annotator;
 import com.arunge.nlp.api.FeatureDescriptor;
-import com.arunge.nlp.api.FeatureExtractor;
 import com.arunge.nlp.api.FeatureWeightType;
-import com.arunge.nlp.text.PreprocessedTextDocument;
-import com.arunge.nlp.text.PreprocessedTextField;
+import com.arunge.nlp.text.AnnotatedTextDocument;
+import com.arunge.nlp.text.AnnotatedTextField;
 
-public class TerminologyFeatureExtractor implements FeatureExtractor<PreprocessedTextDocument> {
+public class TerminologyFeatureExtractor implements FeatureExtractor<AnnotatedTextDocument> {
 
     private static Logger LOG = LoggerFactory.getLogger(TerminologyFeatureExtractor.class);
     
@@ -38,14 +37,14 @@ public class TerminologyFeatureExtractor implements FeatureExtractor<Preprocesse
     }
     
     @Override
-    public Map<FeatureDescriptor, Double> extractFeatures(PreprocessedTextDocument input) {
+    public Map<FeatureDescriptor, Double> extractFeatures(AnnotatedTextDocument input) {
         long start = System.currentTimeMillis();
         Map<FeatureDescriptor, Double> features = new HashMap<>();
         int featCount = 0;
         //Check if features should be split by text field
         int size = input.getLength();
         for(String fieldName : input.getTextFields().keySet()) {
-            PreprocessedTextField field = input.getField(fieldName);
+            AnnotatedTextField field = input.getField(fieldName);
             for(List<AnnotatedToken> sentence : field.getSentences()) {
                 for(int i = 0; i < sentence.size(); i++) {
                     AnnotatedToken token = sentence.get(i);

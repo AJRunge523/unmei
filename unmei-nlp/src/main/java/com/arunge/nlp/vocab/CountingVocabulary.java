@@ -66,6 +66,14 @@ public class CountingVocabulary extends Vocabulary {
         docFreqVector[index] += 1;
     }
     
+    public int getDocFrequency(String word) {
+        int index = getIndex(word);
+        if(index < 0) {
+            return 0;
+        }
+        return docFreqVector[index];
+    }
+    
     public int getDocFrequency(int index) {
         if(index >= index2Word.size()) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Word.size()));

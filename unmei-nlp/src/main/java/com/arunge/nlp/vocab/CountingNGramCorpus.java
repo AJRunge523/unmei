@@ -7,19 +7,16 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Map.Entry;
 
 import com.arunge.nlp.api.AnnotatedToken;
-import com.arunge.nlp.api.Annotator;
-import com.arunge.nlp.api.Corpus;
-import com.arunge.nlp.api.CorpusDocument;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.NGramCorpusDocument;
 import com.arunge.nlp.api.NGramIndexer;
+import com.arunge.nlp.api.TokenForms;
 import com.arunge.nlp.api.Vocabulary;
-import com.arunge.nlp.text.PreprocessedTextDocument;
-import com.arunge.nlp.text.PreprocessedTextField;
+import com.arunge.nlp.text.AnnotatedTextDocument;
+import com.arunge.nlp.text.AnnotatedTextField;
 
 public class CountingNGramCorpus extends Corpus {
 
@@ -39,6 +36,7 @@ public class CountingNGramCorpus extends Corpus {
         this.order = ngramOrder;
         this.documents = new ArrayList<>();
         this.indexOnly = indexOnly;
+        this.tokenFormExtractor = TokenForms.segmented();
     }
     
     public CountingNGramCorpus(CountingNGramIndexer indexer) {
@@ -46,6 +44,7 @@ public class CountingNGramCorpus extends Corpus {
         this.order = indexer.getOrder();
         this.documents = new ArrayList<>();
         this.indexOnly = false;
+        this.tokenFormExtractor = TokenForms.segmented();
     }
     
     /**
@@ -58,7 +57,7 @@ public class CountingNGramCorpus extends Corpus {
     }
     
     @Override
-    public int addTokenizedDocument(PreprocessedTextDocument doc) {
+    public int addTokenizedDocument(AnnotatedTextDocument doc) {
         if(finalized) {
             throw new UnsupportedOperationException("Cannot add additional documents to the corpus after tf-idf counts have been computed.");
         }
@@ -66,11 +65,11 @@ public class CountingNGramCorpus extends Corpus {
         String label = doc.getLabel().orElse("");
         document.setLabel(label);
         document.setLength(doc.getLength());
-        for(PreprocessedTextField field : doc.getTextFields().values()) {
+        for(AnnotatedTextField field : doc.getTextFields().values()) {
             for(List<AnnotatedToken> tokens : field.getSentences()) {
                 for(int i = 0; i < tokens.size(); i++) {
                     AnnotatedToken tok = tokens.get(i);
-                    String tokStr = getTokenString(tok);
+                    String tokStr = tokenFormExtractor.apply(tok);
                     int uniIndex = indexer.getOrAdd(tokStr);
                     indexer.incrementNgramFrequency(uniIndex, 1);
                     boolean added = document.addOrIncrementWord(uniIndex, 1);
@@ -78,7 +77,7 @@ public class CountingNGramCorpus extends Corpus {
                         indexer.incrementDocFrequency(uniIndex, 1);
                     }
                     if(order >= 2 && i >= 1) {
-                        int biIndex = indexer.getOrAdd(getTokenString(tokens.get(i - 1)), 
+                        int biIndex = indexer.getOrAdd(tokenFormExtractor.apply(tokens.get(i - 1)), 
                                 tokStr);
                         added = document.addOrIncrementNgram(biIndex, 2);
                         indexer.incrementNgramFrequency(biIndex, 2);
@@ -87,8 +86,8 @@ public class CountingNGramCorpus extends Corpus {
                         }
                     }
                     if(order >= 3 && i >= 2) {
-                        int triIndex = indexer.getOrAdd(getTokenString(tokens.get(i - 2)), 
-                                getTokenString(tokens.get(i - 1)),
+                        int triIndex = indexer.getOrAdd(tokenFormExtractor.apply(tokens.get(i - 2)), 
+                                tokenFormExtractor.apply(tokens.get(i - 1)),
                                 tokStr);
                         indexer.incrementNgramFrequency(triIndex, 3);
                         added = document.addOrIncrementNgram(triIndex, 3);
@@ -111,14 +110,6 @@ public class CountingNGramCorpus extends Corpus {
         return documents.size() - 1;
     }
 
-    protected String getTokenString(AnnotatedToken token) {
-        Optional<String> segmentAnn = token.getAnnotation(Annotator.SEGMENT);
-        if(segmentAnn.isPresent()) {
-            return segmentAnn.get() + "_" + token.text().toLowerCase();
-        }
-        return token.text().toLowerCase();
-    }
-    
     @Override
     public Vocabulary getVocabulary() {
         return indexer.getVocabulary();

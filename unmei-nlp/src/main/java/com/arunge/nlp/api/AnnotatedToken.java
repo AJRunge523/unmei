@@ -30,11 +30,16 @@ public class AnnotatedToken extends Token{
         return annotations;
     }
     
+    public boolean hasAnnotation(Annotator annotator) {
+        return annotations.containsKey(annotator);
+    }
+    
     public String render(Annotator...annotators) {
         StringBuilder sb = new StringBuilder();
         if(annotators.length == 0) { 
             return super.toString();
         }
+        sb.append(super.toString());
         sb.append(" {");
         for(Annotator a : annotators) {
             sb.append(a.name() + " : " + annotations.get(a) + ", ");
