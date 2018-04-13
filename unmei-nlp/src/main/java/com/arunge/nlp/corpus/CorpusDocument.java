@@ -1,4 +1,4 @@
-package com.arunge.nlp.vocab;
+package com.arunge.nlp.corpus;
 
 import java.io.Serializable;
 import java.util.Collections;

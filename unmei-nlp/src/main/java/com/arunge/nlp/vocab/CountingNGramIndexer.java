@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.Arrays;
 
-import com.arunge.nlp.api.NGramIndexer;
 import com.arunge.nlp.api.NgramKeyCompression;
 
 public class CountingNGramIndexer extends NGramIndexer {
@@ -154,11 +153,20 @@ public class CountingNGramIndexer extends NGramIndexer {
     }
     
     /**
-     * Increment the frequency of the ngram with the provided index and order. If the vocabulary is frozen,
+     * Increment the frequency of the ngram with the provided index and order by 1. If the vocabulary is frozen,
      * this is a no-op. 
      * @param index
      */
     public void incrementNgramFrequency(int index, int order) {
+        incrementNgramFrequency(index, order, 1);
+    }
+    
+    /**
+     * Increment the frequency of the ngram with the provided index and order by the provided amount. If the vocabulary is frozen,
+     * this is a no-op. 
+     * @param index
+     */
+    public void incrementNgramFrequency(int index, int order, int inc) { 
         validateOrder(order);
         if(frozen) {
             return;
@@ -168,11 +176,11 @@ public class CountingNGramIndexer extends NGramIndexer {
         } else if(index >= indexes2Keys[order - 2].length) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
         } else {
-            numNgrams[order - 2]++;
-            ngramFreqVectors[order - 2][index]++;
+            numNgrams[order - 2]+=inc;
+            ngramFreqVectors[order - 2][index]+=inc;
         }
     }
-       
+    
     public long getNgramFrequency(int index, int order) {
         validateOrder(order);
         if(order == 1) {

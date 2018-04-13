@@ -1,4 +1,4 @@
-package com.arunge.nlp.vocab;
+package com.arunge.nlp.corpus;
 
 import java.util.List;
 import java.util.Map;
@@ -7,9 +7,9 @@ import java.util.Map.Entry;
 import com.arunge.nlp.api.AnnotatedToken;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.FeatureIndexer;
-import com.arunge.nlp.api.NGramCorpusDocument;
 import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.AnnotatedTextField;
+import com.arunge.nlp.vocab.CountingNGramIndexer;
 
 public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
 

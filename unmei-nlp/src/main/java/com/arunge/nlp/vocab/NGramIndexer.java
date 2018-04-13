@@ -1,4 +1,4 @@
-package com.arunge.nlp.api;
+package com.arunge.nlp.vocab;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,6 +16,8 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.arunge.nlp.api.NgramKeyCompression;
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 

@@ -1,4 +1,4 @@
-package com.arunge.nlp.api;
+package com.arunge.nlp.tokenization;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.arunge.nlp.api.Token;
 import com.arunge.nlp.tokenization.TokenFilters.TokenFilter;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;

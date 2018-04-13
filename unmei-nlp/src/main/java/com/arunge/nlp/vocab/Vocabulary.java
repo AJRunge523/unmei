@@ -1,4 +1,4 @@
-package com.arunge.nlp.api;
+package com.arunge.nlp.vocab;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,6 +10,8 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
+
+import com.arunge.nlp.api.StringIndexer;
 
 /**
  * 

@@ -1,4 +1,4 @@
-package com.arunge.nlp.api;
+package com.arunge.nlp.vocab;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -9,6 +9,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.junit.Test;
+
+import com.arunge.nlp.vocab.NGramIndexer;
 
 public class TestNGramIndexer {
 

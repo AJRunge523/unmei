@@ -9,8 +9,6 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import com.arunge.nlp.api.Vocabulary;
-
 public class TestVocabularySerialization {
 
     @Test

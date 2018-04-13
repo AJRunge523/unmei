@@ -14,12 +14,12 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
+import com.arunge.nlp.corpus.BasicCorpus;
+import com.arunge.nlp.corpus.Corpus;
+import com.arunge.nlp.corpus.CorpusDocument;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
 import com.arunge.nlp.text.FeatureTextDocument;
 import com.arunge.nlp.text.AnnotatedTextDocument;
-import com.arunge.nlp.vocab.BasicCorpus;
-import com.arunge.nlp.vocab.Corpus;
-import com.arunge.nlp.vocab.CorpusDocument;
 
 public class TestCorpusDocumentSerialization {
 

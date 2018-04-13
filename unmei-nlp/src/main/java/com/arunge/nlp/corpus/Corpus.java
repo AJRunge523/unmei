@@ -1,4 +1,4 @@
-package com.arunge.nlp.vocab;
+package com.arunge.nlp.corpus;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,10 +19,10 @@ import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.FeatureIndexer;
 import com.arunge.nlp.api.FeatureWeightType;
 import com.arunge.nlp.api.TokenForms;
-import com.arunge.nlp.api.Vocabulary;
 import com.arunge.nlp.api.TokenForms.TokenForm;
 import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
+import com.arunge.nlp.vocab.Vocabulary;
 
 /**
  * 

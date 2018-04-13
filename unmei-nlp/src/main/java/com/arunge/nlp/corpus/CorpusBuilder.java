@@ -1,4 +1,4 @@
-package com.arunge.nlp.vocab;
+package com.arunge.nlp.corpus;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +22,8 @@ import com.arunge.nlp.stanford.Tokenizers;
 import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
 import com.arunge.nlp.tokenization.TokenFilters.TokenFilter;
+import com.arunge.nlp.vocab.CountingNGramIndexer;
+import com.arunge.nlp.vocab.CountingVocabulary;
 import com.arunge.nlp.tokenization.TokenSplitter;
 
 public class CorpusBuilder {

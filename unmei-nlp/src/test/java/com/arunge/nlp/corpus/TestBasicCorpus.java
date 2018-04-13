@@ -1,4 +1,4 @@
-package com.arunge.nlp.vocab;
+package com.arunge.nlp.corpus;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
@@ -15,10 +15,13 @@ import org.junit.Test;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.FeatureWeightType;
 import com.arunge.nlp.api.NLPPreprocessingPipeline;
-import com.arunge.nlp.api.Vocabulary;
+import com.arunge.nlp.corpus.BasicCorpus;
+import com.arunge.nlp.corpus.Corpus;
+import com.arunge.nlp.corpus.CorpusDocument;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
 import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
+import com.arunge.nlp.vocab.Vocabulary;
 
 public class TestBasicCorpus {
 

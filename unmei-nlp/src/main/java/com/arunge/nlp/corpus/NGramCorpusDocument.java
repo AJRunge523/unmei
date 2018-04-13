@@ -1,10 +1,8 @@
-package com.arunge.nlp.api;
+package com.arunge.nlp.corpus;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
-
-import com.arunge.nlp.vocab.CorpusDocument;
 
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 

@@ -7,8 +7,6 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.Arrays;
 
-import com.arunge.nlp.api.Vocabulary;
-
 /**
  * 
  *<p>A vocabulary that supports counting word occurrences. Words can be counted both based on # of occurrences in the corpus
