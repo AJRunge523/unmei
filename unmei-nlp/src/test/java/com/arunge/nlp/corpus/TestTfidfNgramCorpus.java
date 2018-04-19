@@ -15,6 +15,7 @@ import java.util.UUID;
 import org.junit.Test;
 
 import com.arunge.nlp.api.NLPPreprocessingPipeline;
+import com.arunge.nlp.api.TokenForms;
 import com.arunge.nlp.corpus.Corpus;
 import com.arunge.nlp.corpus.CorpusDocument;
 import com.arunge.nlp.corpus.TFType;
@@ -32,6 +33,7 @@ public class TestTfidfNgramCorpus {
     public void testSingle() { 
         String a = "The dog picked up the bone. The dog then went and buried the bone.";
         TfIdfNgramCorpus corpus = new TfIdfNgramCorpus(2);
+        corpus.setTokenFormExtraction(TokenForms.lowercase());
         corpus.addTokenizedDocument(createDocument(a));
         Vocabulary v = corpus.getVocabulary();
         assertThat(v.size(), equalTo(10));
@@ -74,6 +76,7 @@ public class TestTfidfNgramCorpus {
         String b = "This is a different kind of test.";
         String c = "This is this is a this a kind";
         Corpus corpus = new TfIdfNgramCorpus(2, TFType.RAW);
+        corpus.setTokenFormExtraction(TokenForms.lowercase());
         corpus.addTokenizedDocument(createDocument(a));
         corpus.addTokenizedDocument(createDocument(b));
         corpus.addTokenizedDocument(createDocument(c));
@@ -161,10 +164,11 @@ public class TestTfidfNgramCorpus {
         String b = "This is your second good sentence that good day.";
         String c = "That was a good sentence that.";
         TfIdfNgramCorpus corpus = new TfIdfNgramCorpus(2, TFType.RAW);
+        corpus.setTokenFormExtraction(TokenForms.lowercase());
         corpus.addTokenizedDocument(createDocument(a));
         corpus.addTokenizedDocument(createDocument(b));
         corpus.addTokenizedDocument(createDocument(c));
-        corpus.trimTail(2);
+        corpus.trimTail(0, 2);
         Vocabulary v = corpus.getVocabulary();
         assertThat(v.size(), equalTo(6));
         assertThat(corpus.getDocuments().size(), equalTo(3));

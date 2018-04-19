@@ -72,7 +72,7 @@ public class CountingCorpus extends Corpus{
     }
 
     @Override
-    public void trimTail(int minInclusion) {
+    public void trimTail(int minCount, int minDocs) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Currently not implemented");
     }

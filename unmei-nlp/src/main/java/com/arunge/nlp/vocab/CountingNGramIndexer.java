@@ -24,24 +24,24 @@ public class CountingNGramIndexer extends NGramIndexer {
         this.numNgrams = new long[order - 1];
     }
 
-    public CountingNGramIndexer trimTail(int minInclusion) {
+    public CountingNGramIndexer trimTail(int minCount, int minDocs) {
         CountingNGramIndexer copy = new CountingNGramIndexer(docFreqVectors.length + 1);
         copy.setNumDocs(getNumDocs());
         
         CountingVocabulary currentVocab = (CountingVocabulary) vocabulary;
-        copy.vocabulary = currentVocab.trimTail(minInclusion);
+        copy.vocabulary = currentVocab.trimTail(minCount, minDocs);
         
         
         //Add all n-grams whose counts are above the threshold to the new indexer - maps these
         //n-grams to new indexes to shrink the amount of space needed for storage.
         for(int o = 2; o <= getOrder(); o++) {
             for(int i = 0; i < indexes2Keys[o - 2].length; i++) {
-                if(getDocFrequency(i, o) >= minInclusion) {
+                if(getNgramFrequency(i, o) >= minCount && getDocFrequency(i, o) >= minDocs) {
                     
                     //Get the original ngram and add it to the new indexer
                     String[] ngram = getNgram(i, o);
                     int index = copy.getOrAdd(false, ngram);
-                    copy.docFreqVectors[o - 2][index] = docFreqVectors[o - 2][i];//setDocFrequency(index, o, docFreqVectors[o - 2][i]);
+                    copy.docFreqVectors[o - 2][index] = docFreqVectors[o - 2][i];
                     copy.ngramFreqVectors[o - 2][index] = ngramFreqVectors[o - 2][i];
                     copy.numNgrams[o - 2] += ngramFreqVectors[o - 2][i];
                 }

@@ -114,7 +114,13 @@ public abstract class Corpus implements Iterable<CorpusDocument>, Serializable {
         }
     }
     
-    public abstract void trimTail(int minInclusion);
+    /**
+     * Trim the vocabulary by removing all words that have fewer total occurrences in the corpus than minCount or
+     * that are present in fewer documents than minDocs.
+     * @param minCount
+     * @param minDocs
+     */
+    public abstract void trimTail(int minCount, int minDocs);
     
     /**
      * Certain types of corpora can execute corpus-wide operations that permanently modify their internal representations.

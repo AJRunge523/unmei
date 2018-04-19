@@ -58,7 +58,7 @@ public class BasicCorpus extends Corpus {
     }
 
     @Override
-    public void trimTail(int minInclusion) {
+    public void trimTail(int minCount, int minDocs) {
         throw new UnsupportedOperationException("Cannot perform count-based operations on a basic corpus");
     }
 

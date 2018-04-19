@@ -150,11 +150,11 @@ public class CountingVocabulary extends Vocabulary {
      * @param minInclusion
      * @return
      */
-    public CountingVocabulary trimTail(int minInclusion) {
+    public CountingVocabulary trimTail(int minCount, int minDocs) {
         CountingVocabulary newVocab = new CountingVocabulary();
         newVocab.setNumDocs(numDocs);
         for(int i = 0; i < vocab.size(); i++) {
-            if(docFreqVector[i] >= minInclusion) {
+            if(docFreqVector[i] >= minDocs && wordFreqVector[i] >= minCount) {
                 int newIndex = newVocab.getOrAdd(index2Word.get(i));
                 newVocab.docFreqVector[newIndex] = docFreqVector[i];
                 newVocab.wordFreqVector[newIndex] = wordFreqVector[i];

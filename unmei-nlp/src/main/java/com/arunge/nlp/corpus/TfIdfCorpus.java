@@ -116,9 +116,9 @@ public class TfIdfCorpus extends Corpus {
     }
 
     @Override
-    public void trimTail(int minInclusion) {
+    public void trimTail(int minCount, int minDocs) {
        CountingVocabulary newVocab = new CountingVocabulary(vocab);
-       newVocab = newVocab.trimTail(minInclusion);
+       newVocab = newVocab.trimTail(minCount, minDocs);
         for(int i = 0; i < documents.size(); i++) {
             CorpusDocument d = documents.get(i);
             CorpusDocument newDoc = new CorpusDocument(d.getDocId());

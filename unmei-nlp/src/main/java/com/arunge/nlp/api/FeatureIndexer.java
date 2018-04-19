@@ -1,8 +1,10 @@
 package com.arunge.nlp.api;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -13,10 +15,12 @@ public class FeatureIndexer implements Serializable, Iterable<Map.Entry<FeatureD
     private static final long serialVersionUID = 2356851576642458045L;
     private Map<FeatureDescriptor, Integer> indexes;
     private Int2DoubleOpenHashMap weights;
+    private List<FeatureDescriptor> feats;
     
     public FeatureIndexer() {
         this.indexes = new HashMap<>();
         this.weights = new Int2DoubleOpenHashMap();
+        this.feats = new ArrayList<>();
     }
     
     public int getOrAdd(String featureName) {
@@ -28,6 +32,7 @@ public class FeatureIndexer implements Serializable, Iterable<Map.Entry<FeatureD
             int index = indexes.size();
             indexes.put(desc, index);
             weights.put(index, 1.0);
+            feats.add(desc);
         }
         return indexes.get(desc);
     }
@@ -42,6 +47,10 @@ public class FeatureIndexer implements Serializable, Iterable<Map.Entry<FeatureD
         } else {
             return -1;
         }
+    }
+    
+    public FeatureDescriptor getFeature(int index) { 
+        return feats.get(index);
     }
     
     public double getWeight(int featIndex) { 

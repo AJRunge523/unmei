@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.arunge.ingest.TextSource;
 import com.arunge.nlp.api.Annotator;
 import com.arunge.nlp.api.TokenForms;
+import com.arunge.nlp.api.TokenForms.TokenForm;
 import com.arunge.nlp.api.Tokenizer;
 import com.arunge.nlp.features.FeatureExtractor;
 import com.arunge.nlp.processors.BasicNLPPreprocessingPipeline;
@@ -22,9 +23,9 @@ import com.arunge.nlp.stanford.Tokenizers;
 import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
 import com.arunge.nlp.tokenization.TokenFilters.TokenFilter;
+import com.arunge.nlp.tokenization.TokenSplitter;
 import com.arunge.nlp.vocab.CountingNGramIndexer;
 import com.arunge.nlp.vocab.CountingVocabulary;
-import com.arunge.nlp.tokenization.TokenSplitter;
 
 public class CorpusBuilder {
 
@@ -38,7 +39,9 @@ public class CorpusBuilder {
     
     private List<TokenSplitter> tokenSplitters;
     
-    private int minInclusion;
+    private int minDocs;
+    
+    private int minCount;
     
     private Corpus corpus;
     
@@ -163,8 +166,9 @@ public class CorpusBuilder {
         return this;
     }
     
-    public CorpusBuilder withMinVocabInclusion(int minInclusion) {
-        this.minInclusion = minInclusion;
+    public CorpusBuilder withMinVocabInclusion(int minCount, int minDocs) {
+        this.minDocs = minDocs;
+        this.minCount = minCount;
         return this;
     }
     
@@ -212,6 +216,17 @@ public class CorpusBuilder {
     public CorpusBuilder withStemTokenForms() {
         this.corpus.setTokenFormExtraction(TokenForms.stem());
         this.stemTag = true;
+        return this;
+    }
+    
+    /**
+     * Uses the provided {@link TokenForm} function to extract forms from tokens.
+     * Note that no form dependencies are set with this flag (i.e. for lemmatization, pos tagging, etc.)
+     * @param form
+     * @return
+     */
+    public CorpusBuilder withTokenForms(TokenForm form) {
+        this.corpus.setTokenFormExtraction(form);
         return this;
     }
     
@@ -271,8 +286,8 @@ public class CorpusBuilder {
             source.getDocuments().forEach(d -> tokenizeAndAdd(d));
             LOG.info("Finished processing text source");
         }
-        if(minInclusion > 0) {
-            corpus.trimTail(minInclusion);
+        if(minDocs > 0 || minCount > 0) {
+            corpus.trimTail(minCount, minDocs);
         }
         corpus.finalize();
         return corpus;
@@ -296,7 +311,7 @@ public class CorpusBuilder {
             LOG.info("Processed {} documents. Vocabulary size: {}", processedDocs, corpus.getVocabulary().size());
         }
         if(trimEvery > 0 && processedDocs % trimEvery == 0) { 
-            corpus.trimTail(minInclusion);
+            corpus.trimTail(minCount, minDocs);
         }
     }
     

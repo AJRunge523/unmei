@@ -125,7 +125,7 @@ public class TestDFNgramIndexer {
         assertEquals(indexer.getNumNgrams(2), 7);
         assertEquals(indexer.getNumNgrams(3), 8);
         
-        CountingNGramIndexer newIndexer = indexer.trimTail(3);
+        CountingNGramIndexer newIndexer = indexer.trimTail(0, 3);
         assertEquals(5, newIndexer.size(1));
         assertEquals(1, newIndexer.size(2));
         assertEquals(2, newIndexer.size(3));

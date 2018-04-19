@@ -146,8 +146,8 @@ public class CountingNGramCorpus extends Corpus {
     }
 
     @Override
-    public void trimTail(int minInclusion) {
-        CountingNGramIndexer newIndexer = indexer.trimTail(minInclusion);
+    public void trimTail(int minCount, int minDocs) {
+        CountingNGramIndexer newIndexer = indexer.trimTail(minCount, minDocs);
         for(int i = 0; i < documents.size(); i++) {
             NGramCorpusDocument d = documents.get(i);
             NGramCorpusDocument newDoc = new NGramCorpusDocument(d.getDocId(), d.getOrder());

@@ -149,7 +149,7 @@ public class TestTfIdfCorpus {
         corpus.addTokenizedDocument(createDocument(a));
         corpus.addTokenizedDocument(createDocument(b));
         corpus.addTokenizedDocument(createDocument(c));
-        corpus.trimTail(2);
+        corpus.trimTail(0, 2);
         Vocabulary v = corpus.getVocabulary();
         assertThat(v.size(), equalTo(4));
         assertThat(corpus.getDocuments().size(), equalTo(3));
