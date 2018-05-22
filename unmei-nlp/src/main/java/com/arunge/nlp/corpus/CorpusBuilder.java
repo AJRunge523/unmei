@@ -201,6 +201,10 @@ public class CorpusBuilder {
         return this;
     }
     
+    /**
+     * Indexes the lowercase forms of the tokens, split by the text field they appear in.
+     * @return
+     */
     public CorpusBuilder withSplitFieldTokenForms() { 
         this.corpus.setTokenFormExtraction(TokenForms.segmented());
         return this;

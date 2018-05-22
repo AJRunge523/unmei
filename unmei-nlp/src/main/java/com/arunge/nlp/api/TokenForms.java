@@ -53,6 +53,17 @@ public class TokenForms {
         return token -> token.getAnnotation(Annotator.LEMMA).get().toLowerCase();
     }
     
+    public static TokenForm splitLemma() { 
+        return token -> {
+            Optional<String> segmentAnn = token.getAnnotation(Annotator.SEGMENT);
+            if(segmentAnn.isPresent()) { 
+                return segmentAnn.get() + "_" + token.getAnnotation(Annotator.LEMMA).get().toLowerCase();
+            }
+            return token.text().toLowerCase();
+        };
+        
+    }
+    
     /**
      * Returns the lowercase stem of the token.
      * @return
