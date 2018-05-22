@@ -17,6 +17,7 @@
   	<module>unmei-iterators</module>
   	<module>unmei-nlp</module>
   	<module>unmei-ml</module>
+  	<module>unmei-math</module>
   </modules>
    <build>
     <plugins>

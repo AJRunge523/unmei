@@ -81,6 +81,10 @@ public class SVMRank {
     }
 
     public static String instanceToString(int queryId, int rank, Map<Integer, Double> instance) {
+        return instanceToString(queryId, rank, instance, null);
+    }
+    
+    public static String instanceToString(int queryId, int rank, Map<Integer, Double> instance, String info) {
         DecimalFormat df = new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
         df.setMaximumFractionDigits(20);
         StringBuffer inst = new StringBuffer().append(rank + " ")
@@ -92,11 +96,12 @@ public class SVMRank {
                 .append(index)
                 .append(":")
                 .append(df.format(instance.get(index)));
-            
         });
+        if(info != null && !info.isEmpty()) {
+            inst.append(" # ")
+                .append(info);
+        }
         return inst.toString();
-        
-                
     }
     
 }
