@@ -28,6 +28,9 @@ public class CosineSimilarity {
         for(Integer key : v2.keySet()) {
             secondNorm += (v2.get(key) * v2.get(key));
         }
+        if(firstNorm == 0 || secondNorm == 0) { 
+            return 0.0;
+        }
         firstNorm = Math.sqrt(firstNorm);
         secondNorm = Math.sqrt(secondNorm);
         double cosine = dot / (firstNorm * secondNorm);
@@ -45,6 +48,9 @@ public class CosineSimilarity {
             dot += v1[i] * v2[i];
             firstNorm += v1[i] * v1[i];
             secondNorm += v2[i] * v2[i];
+        }
+        if(firstNorm == 0 || secondNorm == 0) { 
+            return 0.0;
         }
         firstNorm = Math.sqrt(firstNorm);
         secondNorm = Math.sqrt(secondNorm);
