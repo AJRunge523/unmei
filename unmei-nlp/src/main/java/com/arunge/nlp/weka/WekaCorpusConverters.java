@@ -35,35 +35,22 @@ public class WekaCorpusConverters {
         return attributes;
     }
     
-    public static Map<Integer, ArrayList<Attribute>> createNgramVocabAttributes(NGramIndexer indexer) {
-        Map<Integer, ArrayList<Attribute>> ngramAttributes = new HashMap<>();
+    public static ArrayList<Attribute> createNgramVocabAttributes(NGramIndexer indexer) {
         ArrayList<Attribute> attributes = new ArrayList<>();
-        Vocabulary vocab = indexer.getVocabulary();
-        for(int i = 0; i < vocab.size(); i++) {
-            if(vocab.getWord(i) != null) {
-                Attribute attr = new Attribute(vocab.getWord(i));
-                attributes.add(attr);
-            }
+        for(int i = 0; i < indexer.size(); i++) {
+            String[] key = indexer.getNgram(i);
+            String label = Arrays.stream(key).reduce("",  (a, b) -> {
+                if(a.isEmpty()) {
+                    return b;
+                } else if(b.isEmpty()) {
+                    return a;
+                } else {
+                    return a + "_" + b;
+                }
+            });
+            attributes.add(new Attribute(label));
         }
-        ngramAttributes.put(1, attributes);
-        for(int o = 2; o <= indexer.getOrder(); o++) {
-            ngramAttributes.put(o, new ArrayList<Attribute>());
-            attributes = ngramAttributes.get(o);
-            for(int i = 1; i < indexer.size(o); i++) {
-                String[] key = indexer.getNgram(i, o);
-                String label = Arrays.stream(key).reduce("", (a, b) -> {
-                   if(a.isEmpty()) {
-                       return b;
-                   } else if(b.isEmpty()) {
-                       return a;
-                   } else {
-                       return a + "_" + b;
-                   }
-                });
-                attributes.add(new Attribute(label));
-            }
-        }
-        return ngramAttributes;
+        return attributes;
     }
     
     /**
@@ -105,17 +92,14 @@ public class WekaCorpusConverters {
      * @return
      */
     public static Instance convert(NGramCorpusDocument doc, int totalVocabAttrs, CountingNGramIndexer indexer, 
-            Map<Integer, ArrayList<Attribute>> vocabAttrIndices, List<Attribute> attributes, boolean includeId) { 
+            ArrayList<Attribute> vocabAttrIndices, List<Attribute> attributes, boolean includeId) { 
         double[] values = new double[attributes.size()];
 
-        int offset = 0;
         for(int i = 1; i <= doc.getOrder(); i++) {
             Map<Integer, Double> docNgrams = doc.getNgrams(i);
             for(Integer k : docNgrams.keySet()) {
-//                System.out.println(attributes.get(k + offset).name() + ": " + indexer.getNgram(k, i)[0] + " --> " + docNgrams.get(k));
-                values[k + offset] = docNgrams.get(k);
+                values[k] = docNgrams.get(k);
             }
-            offset += vocabAttrIndices.get(i).size() - 1;
         }
         Map<Integer, Double> docFeats = doc.getFeatures();
         for(int featIndex : docFeats.keySet()) {

@@ -24,16 +24,18 @@ public class TerminologyFeatureExtractor implements FeatureExtractor<AnnotatedTe
 
     private static Logger LOG = LoggerFactory.getLogger(TerminologyFeatureExtractor.class);
     
+    private boolean segment;
     private List<String[]> terms;
     private List<String> featNames;
     private Map<String, List<TermEntry>> termLookup;
     
     public TerminologyFeatureExtractor() {
-        this("src/main/resources/terminology.txt");
+        this("src/main/resources/terminology.txt", false);
     }
     
-    public TerminologyFeatureExtractor(String terminologyFile) {
+    public TerminologyFeatureExtractor(String terminologyFile, boolean segment) {
         loadTerms(terminologyFile);
+        this.segment = segment;
     }
     
     @Override
@@ -65,7 +67,7 @@ public class TerminologyFeatureExtractor implements FeatureExtractor<AnnotatedTe
                             if(j - i == termEntry.words.length) {
                                 String f = featNames.get(termEntry.index);
                                 Optional<String> segmentAnnotation = token.getAnnotation(Annotator.SEGMENT);
-                                if(segmentAnnotation.isPresent()) {
+                                if(segmentAnnotation.isPresent() && segment) {
                                     f = segmentAnnotation.get() + "_" + f;
                                 }
                                 FeatureDescriptor featDesc = new FeatureDescriptor(f, FeatureWeightType.TFIDF);

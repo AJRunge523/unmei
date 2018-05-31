@@ -21,25 +21,24 @@ public class TestNGramIndexer {
         indexer.getOrAdd("is", "a");
         indexer.getOrAdd("a", "test");
         indexer.getOrAdd("test", "a");
-        indexer.getOrAdd("this", "test");
-        
-        assertEquals(0, indexer.getIndex("this"));
-        assertEquals(1, indexer.getIndex("is"));
-        assertEquals(2, indexer.getIndex("a"));
-        assertEquals(3, indexer.getIndex("test"));
-        assertEquals(1, indexer.getIndex("this", "is"));
-        assertEquals(2, indexer.getIndex("is", "a"));
-        assertEquals(3, indexer.getIndex("a", "test"));
-        assertEquals(4, indexer.getIndex("test", "a"));
+        int testIndex = indexer.getOrAdd("this", "test");
+        System.out.println(testIndex);
+        assertEquals(indexer.size(), 10);
+        assertEquals(1, indexer.getIndex("this"));
+        assertEquals(2, indexer.getIndex("is"));
+        assertEquals(4, indexer.getIndex("a"));
+        assertEquals(6, indexer.getIndex("test"));
+        assertEquals(3, indexer.getIndex("this", "is"));
+        assertEquals(5, indexer.getIndex("is", "a"));
+        assertEquals(7, indexer.getIndex("a", "test"));
+        assertEquals(8, indexer.getIndex("test", "a"));
+        assertEquals(9, indexer.getIndex("this", "test"));
         assertEquals(-1, indexer.getIndex("not", "present"));
         assertEquals(-1, indexer.getIndex("try", "a", "trigram"));
         assertEquals(-1, indexer.getIndex("try"));
-        assertArrayEquals(new String[]{"this", "is"}, indexer.getNgram(index, 2));
-        assertArrayEquals(new String[] {"test"}, indexer.getNgram(3, 1));
-        assertEquals(indexer.size(1), 4);
-        assertEquals(indexer.size(2), 5);
-        assertEquals(indexer.getOrAdd("is", "a"), 2);
-        assertEquals(indexer.size(2), 5);
+        assertArrayEquals(new String[]{"this", "is"}, indexer.getNgram(index));
+        assertArrayEquals(new String[] {"test"}, indexer.getNgram(6));
+        assertEquals(indexer.getOrAdd("is", "a"), 5);
     }
     
     @Test
@@ -50,33 +49,31 @@ public class TestNGramIndexer {
         indexer.getOrAdd("a", "test", "of");
         indexer.getOrAdd("test", "of", "a");
         indexer.getOrAdd("of", "a", "vocabulary");
-        assertEquals(6, indexer.size(1));
-        assertEquals(6, indexer.size(2));
-        assertEquals(5, indexer.size(3));
-        assertEquals(0, indexer.getIndex("this"));
-        assertEquals(1, indexer.getIndex("is"));
-        assertEquals(2, indexer.getIndex("a"));
-        assertEquals(3, indexer.getIndex("test"));
-        assertEquals(1, indexer.getIndex("this", "is"));
-        assertEquals(2, indexer.getIndex("is", "a"));
-        assertEquals(3, indexer.getIndex("a", "test"));
-        assertEquals(4, indexer.getIndex("test", "of"));
-        assertEquals(5, indexer.getIndex("of", "a"));
-        assertEquals(6, indexer.getIndex("a", "vocabulary"));
+        assertEquals(indexer.size(), 18);
+        assertEquals(1, indexer.getIndex("this"));
+        assertEquals(2, indexer.getIndex("is"));
+        assertEquals(3, indexer.getIndex("a"));
+        assertEquals(7, indexer.getIndex("test"));
+        assertEquals(10, indexer.getIndex("of"));
+        assertEquals(4, indexer.getIndex("this", "is"));
+        assertEquals(5, indexer.getIndex("is", "a"));
+        assertEquals(8, indexer.getIndex("a", "test"));
+        assertEquals(11, indexer.getIndex("test", "of"));
+        assertEquals(13, indexer.getIndex("of", "a"));
+        assertEquals(16, indexer.getIndex("a", "vocabulary"));
         
-        assertEquals(1, indexer.getIndex("this", "is", "a"));
-        assertEquals(2, indexer.getIndex("is", "a", "test"));
-        assertEquals(3, indexer.getIndex("a", "test", "of"));
-        assertEquals(4, indexer.getIndex("test", "of", "a"));
-        assertEquals(5, indexer.getIndex("of", "a", "vocabulary"));
+        assertEquals(6, indexer.getIndex("this", "is", "a"));
+        assertEquals(9, indexer.getIndex("is", "a", "test"));
+        assertEquals(12, indexer.getIndex("a", "test", "of"));
+        assertEquals(14, indexer.getIndex("test", "of", "a"));
+        assertEquals(17, indexer.getIndex("of", "a", "vocabulary"));
         
         assertEquals(-1, indexer.getIndex("not", "present"));
         assertEquals(-1, indexer.getIndex("try", "a", "trigram"));
         assertEquals(-1, indexer.getIndex("try"));
-        assertArrayEquals(new String[]{"this", "is", "a"}, indexer.getNgram(index, 3));
-        assertArrayEquals(new String[] {"test"}, indexer.getNgram(3, 1));
-        assertEquals(indexer.getOrAdd("is", "a", "test"), 2);
-        assertEquals(indexer.size(3), 5);
+        assertArrayEquals(new String[]{"this", "is", "a"}, indexer.getNgram(index));
+        assertArrayEquals(new String[] {"test"}, indexer.getNgram(7));
+        assertEquals(indexer.getOrAdd("is", "a", "test"), 9);
     }
     
     @Test
@@ -100,34 +97,33 @@ public class TestNGramIndexer {
         indexer.write(baos);
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         NGramIndexer decoded = NGramIndexer.read(bais);
-        assertEquals(6, decoded.size(1));
-        assertEquals(6, decoded.size(2));
-        assertEquals(5, decoded.size(3));
-        assertEquals(0, decoded.getIndex("this"));
-        assertEquals(1, decoded.getIndex("is"));
-        assertEquals(2, decoded.getIndex("a"));
-        assertEquals(3, decoded.getIndex("test"));
-        assertEquals(1, decoded.getIndex("this", "is"));
-        assertEquals(2, decoded.getIndex("is", "a"));
-        assertEquals(3, decoded.getIndex("a", "test"));
-        assertEquals(4, decoded.getIndex("test", "of"));
-        assertEquals(5, decoded.getIndex("of", "a"));
-        assertEquals(6, decoded.getIndex("a", "vocabulary"));
+        System.out.println(decoded.size());
+        assertEquals(1, indexer.getIndex("this"));
+        assertEquals(2, indexer.getIndex("is"));
+        assertEquals(3, indexer.getIndex("a"));
+        assertEquals(7, indexer.getIndex("test"));
+        assertEquals(10, indexer.getIndex("of"));
+        assertEquals(4, indexer.getIndex("this", "is"));
+        assertEquals(5, indexer.getIndex("is", "a"));
+        assertEquals(8, indexer.getIndex("a", "test"));
+        assertEquals(11, indexer.getIndex("test", "of"));
+        assertEquals(13, indexer.getIndex("of", "a"));
+        assertEquals(16, indexer.getIndex("a", "vocabulary"));
         
-        assertEquals(1, decoded.getIndex("this", "is", "a"));
-        assertEquals(2, decoded.getIndex("is", "a", "test"));
-        assertEquals(3, decoded.getIndex("a", "test", "of"));
-        assertEquals(4, decoded.getIndex("test", "of", "a"));
-        assertEquals(5, decoded.getIndex("of", "a", "vocabulary"));
+        assertEquals(6, indexer.getIndex("this", "is", "a"));
+        assertEquals(9, indexer.getIndex("is", "a", "test"));
+        assertEquals(12, indexer.getIndex("a", "test", "of"));
+        assertEquals(14, indexer.getIndex("test", "of", "a"));
+        assertEquals(17, indexer.getIndex("of", "a", "vocabulary"));
         
-        assertEquals(-1, decoded.getIndex("not", "present"));
-        assertEquals(-1, decoded.getIndex("try", "a", "trigram"));
-        assertEquals(-1, decoded.getIndex("try"));
-        assertArrayEquals(new String[]{"this", "is", "a"}, decoded.getNgram(index, 3));
-        assertArrayEquals(new String[] {"test"}, decoded.getNgram(3, 1));
-        assertEquals(decoded.getOrAdd("is", "a", "test"), 2);
-        assertEquals(decoded.size(3), 5);
+        assertEquals(-1, indexer.getIndex("not", "present"));
+        assertEquals(-1, indexer.getIndex("try", "a", "trigram"));
+        assertEquals(-1, indexer.getIndex("try"));
+        assertArrayEquals(new String[]{"this", "is", "a"}, indexer.getNgram(index));
+        assertArrayEquals(new String[] {"test"}, indexer.getNgram(7));
+        assertEquals(indexer.getOrAdd("is", "a", "test"), 9);
     }
+    
     
 }
 

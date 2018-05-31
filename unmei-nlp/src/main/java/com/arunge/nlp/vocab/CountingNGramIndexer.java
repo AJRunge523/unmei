@@ -12,39 +12,34 @@ import com.arunge.nlp.api.NgramKeyCompression;
 public class CountingNGramIndexer extends NGramIndexer {
 
     private static final long serialVersionUID = 3798562177609286573L;
-    private int[][] docFreqVectors;
-    private int[][] ngramFreqVectors;
+    private int[] docFreqVectors;
+    private int[] ngramFreqVectors;
     private long[] numNgrams;
+    private int numDocs = 0;
     
     public CountingNGramIndexer(int order) {
         super(order);
-        this.vocabulary = new CountingVocabulary();
-        this.docFreqVectors = new int[order - 1][10];
-        this.ngramFreqVectors = new int[order - 1][10];
-        this.numNgrams = new long[order - 1];
+        this.docFreqVectors = new int[10];
+        this.ngramFreqVectors = new int[10];
+        this.numNgrams = new long[order];
     }
 
     public CountingNGramIndexer trimTail(int minCount, int minDocs) {
-        CountingNGramIndexer copy = new CountingNGramIndexer(docFreqVectors.length + 1);
+        CountingNGramIndexer copy = new CountingNGramIndexer(this.order);
         copy.setNumDocs(getNumDocs());
-        
-        CountingVocabulary currentVocab = (CountingVocabulary) vocabulary;
-        copy.vocabulary = currentVocab.trimTail(minCount, minDocs);
-        
         
         //Add all n-grams whose counts are above the threshold to the new indexer - maps these
         //n-grams to new indexes to shrink the amount of space needed for storage.
-        for(int o = 2; o <= getOrder(); o++) {
-            for(int i = 0; i < indexes2Keys[o - 2].length; i++) {
-                if(getNgramFrequency(i, o) >= minCount && getDocFrequency(i, o) >= minDocs) {
-                    
-                    //Get the original ngram and add it to the new indexer
-                    String[] ngram = getNgram(i, o);
-                    int index = copy.getOrAdd(false, ngram);
-                    copy.docFreqVectors[o - 2][index] = docFreqVectors[o - 2][i];
-                    copy.ngramFreqVectors[o - 2][index] = ngramFreqVectors[o - 2][i];
-                    copy.numNgrams[o - 2] += ngramFreqVectors[o - 2][i];
-                }
+        for(int i = 1; i < index2Keys.length; i++) {
+            if(getNgramFrequency(i) >= minCount && getDocFrequency(i) >= minDocs) {
+                
+                //Get the original ngram and add it to the new indexer
+                String[] ngram = getNgram(i);
+                int index = copy.getOrAdd(false, ngram);
+                System.out.println(Arrays.stream(ngram).reduce("", (a, b) -> a + " " + b) + " --> " + index);
+                copy.docFreqVectors[index] = docFreqVectors[i];
+                copy.ngramFreqVectors[index] = ngramFreqVectors[i];
+                copy.numNgrams[ngram.length - 1] += ngramFreqVectors[i];
             }
         }
         if(frozen) {
@@ -56,44 +51,39 @@ public class CountingNGramIndexer extends NGramIndexer {
     protected int addNgram(int[] indexedNgram, int from, int to) {
         int order = to - from;
         long ngramKey = NgramKeyCompression.generateKey(indexedNgram, from, to);
-        int index = indexers[order - 2].get(ngramKey);
-        if(index == 0) {
-            indexers[order - 2].put(ngramKey,  indexers[order - 2].size() + 1);
-            index = indexers[order - 2].size();
-            long[] index2Keys = indexes2Keys[order - 2];
+        int index = indexers[order - 1].get(ngramKey);
+        if(index == 0 && !frozen) {
+            this.size += 1;
+            index = this.size;
+            indexers[order - 1].put(ngramKey, index);
             if(index >= index2Keys.length) {
-                indexes2Keys[order - 2] = Arrays.copyOf(index2Keys, (int) (index2Keys.length * 3.0/2));
-                docFreqVectors[order - 2] = Arrays.copyOf(docFreqVectors[order - 2], (int) (docFreqVectors[order - 2].length * 3.0/2));
-                ngramFreqVectors[order - 2] = Arrays.copyOf(ngramFreqVectors[order - 2], (int) (ngramFreqVectors[order - 2].length * 3.0/2));
+                index2Keys = Arrays.copyOf(index2Keys, (int) (index2Keys.length * 3.0/2));
+                docFreqVectors = Arrays.copyOf(docFreqVectors, (int) (docFreqVectors.length * 3.0/2));
+                ngramFreqVectors = Arrays.copyOf(ngramFreqVectors, (int) (ngramFreqVectors.length * 3.0/2));
             }
-            indexes2Keys[order - 2][index] = ngramKey;
+            index2Keys[index] = ngramKey;
+            return index;
+        } else if(index == 0) { 
+            return -1;
+        } else {
+            return index;
         }
-        return index;
     }
     
     
     
-    public void incrementDocFrequency(int index, int order) {
-        validateOrder(order);
-        if(order == 1) {
-            ((CountingVocabulary) vocabulary).incrementDocFrequency(index);
-        } else if(index >= indexes2Keys[order - 2].length) {
-            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
-        } else {
-            docFreqVectors[order - 2][index] += 1;
+    public void incrementDocFrequency(int index) {
+        if(index < 0 || index >= index2Keys.length) {
+            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Keys.length));
         }
+        docFreqVectors[index] += 1;
     }
     
-    public int getDocFrequency(int index, int order) {
-        validateOrder(order);
-        if(order == 1) {
-            return((CountingVocabulary) vocabulary).getDocFrequency(index);
-        } else if(index >= indexes2Keys[order - 2].length) {
-            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
-        } else {
-            return docFreqVectors[order - 2][index];
-        }
-        
+    public int getDocFrequency(int index) {
+        if(index < 0 || index >= index2Keys.length) {
+            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Keys.length));
+        } 
+        return docFreqVectors[index];
     }
     
     public int getDocFrequency(String...ngram) {
@@ -107,41 +97,36 @@ public class CountingNGramIndexer extends NGramIndexer {
             if(index == -1) {
                 return 0;
             }
-            return docFreqVectors[order - 2][index];
+            return docFreqVectors[index];
         }
     }
     
-    public double[][] computeIDFVector() {
+    public double[] computeIDFVector() {
         int numDocs = getNumDocs();
         if(numDocs == 0) {
-            return new double[docFreqVectors.length][];
+            return new double[0];
         }
-        CountingVocabulary vocab = (CountingVocabulary) vocabulary;
-        double[][] idfVectors = new double[docFreqVectors.length + 1][];
-        idfVectors[0] = vocab.computeIDFVector();
-        for(int o = 0; o < docFreqVectors.length; o++) {
-            idfVectors[o + 1] = new double[docFreqVectors[o].length];
-            for(int i = 0; i < docFreqVectors[o].length; i++) {
-                if(docFreqVectors[o][i] == 0) {
-                    idfVectors[o + 1][i] = 0;
-                } else {
-                    idfVectors[o + 1][i] = Math.log(numDocs / ((double) docFreqVectors[o][i]));
-                }
+        double[] idfVectors = new double[docFreqVectors.length];
+        for(int i = 0; i < docFreqVectors.length; i++) {
+            if(docFreqVectors[i] == 0) {
+                idfVectors[i] = 0;
+            } else {
+                idfVectors[i] = Math.log(numDocs / ((double) docFreqVectors[i]));
             }
         }
         return idfVectors;
     }
     
-    public int[][] getDocFrequencies() {
+    public int[] getDocFrequencies() {
         return Arrays.copyOf(docFreqVectors, docFreqVectors.length);
     }
     
     public int getNumDocs() {
-        return ((CountingVocabulary) vocabulary).getNumDocs();
+        return this.numDocs;
     }
 
     public void incrementNumDocs() {
-        ((CountingVocabulary) vocabulary).incrementNumDocs();
+        this.numDocs += 1;
     }
     
     /**
@@ -149,7 +134,7 @@ public class CountingNGramIndexer extends NGramIndexer {
      * @param numDocs
      */
     private void setNumDocs(int numDocs) {
-        ((CountingVocabulary) vocabulary).setNumDocs(numDocs);
+        this.numDocs = numDocs;
     }
     
     /**
@@ -157,8 +142,8 @@ public class CountingNGramIndexer extends NGramIndexer {
      * this is a no-op. 
      * @param index
      */
-    public void incrementNgramFrequency(int index, int order) {
-        incrementNgramFrequency(index, order, 1);
+    public void incrementNgramFrequency(int index) {
+        incrementNgramFrequency(index, 1);
     }
     
     /**
@@ -166,46 +151,35 @@ public class CountingNGramIndexer extends NGramIndexer {
      * this is a no-op. 
      * @param index
      */
-    public void incrementNgramFrequency(int index, int order, int inc) { 
-        validateOrder(order);
+    public void incrementNgramFrequency(int index, int inc) { 
         if(frozen) {
             return;
         }
-        if(order == 1) {
-            ((CountingVocabulary) vocabulary).incrementWordFrequency(index); 
-        } else if(index >= indexes2Keys[order - 2].length) {
-            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
+        if (index < 0 || index >= index2Keys.length) {
+            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Keys.length));
         } else {
-            numNgrams[order - 2]+=inc;
-            ngramFreqVectors[order - 2][index]+=inc;
+            String[] ngram = getNgram(index);
+            numNgrams[ngram.length - 1]+=inc;
+            ngramFreqVectors[index]+=inc;
         }
     }
     
-    public long getNgramFrequency(int index, int order) {
-        validateOrder(order);
-        if(order == 1) {
-            return ((CountingVocabulary) vocabulary).getWordFrequency(index);
-        } else if(index>= indexes2Keys[order - 2].length) {
-            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, indexes2Keys[order].length));
+    public long getNgramFrequency(int index) {
+        if(index >= index2Keys.length) {
+            throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Keys.length));
         } else {
-            return ngramFreqVectors[order - 2][index];
+            return ngramFreqVectors[index];
         }
     }
     
     public long getNgramFrequency(String...ngram) {
         int order = ngram.length;
         validateOrder(order);
-        if(order == 1) {
-            
-            return ((CountingVocabulary) vocabulary).getWordFrequency(ngram[0]);
-        } else {
-            int index = getIndex(ngram);
-            if(index == -1) {
-                return 0;
-            }
-            return ngramFreqVectors[order - 2][index];
+        int index = getIndex(ngram);
+        if(index == -1) {
+            return 0;
         }
-        
+        return ngramFreqVectors[index];
     }
     
     /**
@@ -215,15 +189,12 @@ public class CountingNGramIndexer extends NGramIndexer {
      */
     public long getNumNgrams(int order) {
         validateOrder(order);
-        if(order == 1) {
-            return ((CountingVocabulary) vocabulary).getNumTokens();
-        }
-        return numNgrams[order - 2];
+        return numNgrams[order - 1];
     }
     
     private void validateOrder(int order) {
-        if(order < 1 || order > indexes2Keys.length + 1) {
-            throw new UnsupportedOperationException("Invalid order: " + order + ", Maximum supported order: " + (indexes2Keys.length + 1));
+        if(order < 1 || order > this.order + 1) {
+            throw new UnsupportedOperationException("Invalid order: " + order + ", Maximum supported order: " + (this.order + 1));
         }
     }
 

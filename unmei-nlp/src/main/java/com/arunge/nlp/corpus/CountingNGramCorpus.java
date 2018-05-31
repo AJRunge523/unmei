@@ -74,25 +74,25 @@ public class CountingNGramCorpus extends Corpus {
                     indexer.incrementNgramFrequency(uniIndex, 1);
                     boolean added = document.addOrIncrementWord(uniIndex, 1);
                     if(added) {
-                        indexer.incrementDocFrequency(uniIndex, 1);
+                        indexer.incrementDocFrequency(uniIndex);
                     }
                     if(order >= 2 && i >= 1) {
                         int biIndex = indexer.getOrAdd(tokenFormExtractor.apply(tokens.get(i - 1)), 
                                 tokStr);
                         added = document.addOrIncrementNgram(biIndex, 2);
-                        indexer.incrementNgramFrequency(biIndex, 2);
+                        indexer.incrementNgramFrequency(biIndex);
                         if(added) {
-                            indexer.incrementDocFrequency(biIndex, 2);
+                            indexer.incrementDocFrequency(biIndex);
                         }
                     }
                     if(order >= 3 && i >= 2) {
                         int triIndex = indexer.getOrAdd(tokenFormExtractor.apply(tokens.get(i - 2)), 
                                 tokenFormExtractor.apply(tokens.get(i - 1)),
                                 tokStr);
-                        indexer.incrementNgramFrequency(triIndex, 3);
+                        indexer.incrementNgramFrequency(triIndex);
                         added = document.addOrIncrementNgram(triIndex, 3);
                         if(added) {
-                            indexer.incrementDocFrequency(triIndex, 3);
+                            indexer.incrementDocFrequency(triIndex);
                         }
                     }
                 }
@@ -156,7 +156,7 @@ public class CountingNGramCorpus extends Corpus {
             int newLength = 0;
             for(Integer wordID : d.getVocab().keySet()) {
                 
-                int newWordID = newIndexer.getIndex(indexer.getNgram(wordID, 1));
+                int newWordID = newIndexer.getIndex(indexer.getNgram(wordID));
                 if(newWordID != -1) {
                     newDoc.addOrIncrementWord(newWordID, d.getWord(wordID));
                     newLength += d.getWord(wordID);
@@ -168,7 +168,7 @@ public class CountingNGramCorpus extends Corpus {
                 Map<Integer, Double> ngramCounts = d.getNgrams(o);
                 int ngramLength = 0;
                 for(int key : ngramCounts.keySet()) {
-                    String[] ngram = indexer.getNgram(key, o);
+                    String[] ngram = indexer.getNgram(key);
                     int newNgramIndex = newIndexer.getIndex(ngram);
                     if(newNgramIndex != -1 ) {
                         newDoc.addOrIncrementNgram(newNgramIndex, o, ngramCounts.get(key));

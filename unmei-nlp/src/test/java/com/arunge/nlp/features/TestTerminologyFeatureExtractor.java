@@ -20,7 +20,7 @@ public class TestTerminologyFeatureExtractor {
         String text = "Neural networks are the future of all machine learning techniques";
         NLPPreprocessingPipeline pipeline = new StanfordNLPPreprocessingPipeline(Annotator.POS, Annotator.LEMMA);
         AnnotatedTextDocument doc = pipeline.apply(new TextDocument("a", text));
-        TerminologyFeatureExtractor extractor = new TerminologyFeatureExtractor("src/test/resources/ai_terminology.txt");
+        TerminologyFeatureExtractor extractor = new TerminologyFeatureExtractor("src/test/resources/ai_terminology.txt", false);
         Map<FeatureDescriptor, Double> features = extractor.extractFeatures(doc);
         assertEquals(features.get(FeatureDescriptor.of("term_machine_learning")).doubleValue(), 0.1, 0.0001);
         assertEquals(features.get(FeatureDescriptor.of("term_neural_network")).doubleValue(), 0.1, 0.0001);
@@ -36,7 +36,7 @@ public class TestTerminologyFeatureExtractor {
         d.setTextField("field1", field1);
         d.setTextField("field2", field2);
         AnnotatedTextDocument doc = pipeline.apply(d);
-        TerminologyFeatureExtractor extractor = new TerminologyFeatureExtractor("src/test/resources/ai_terminology.txt");
+        TerminologyFeatureExtractor extractor = new TerminologyFeatureExtractor("src/test/resources/ai_terminology.txt", true);
         Map<FeatureDescriptor, Double> features = extractor.extractFeatures(doc);
         assertEquals(features.size(), 2);
         for(FeatureDescriptor key : features.keySet()) {

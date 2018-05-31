@@ -103,11 +103,12 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
             } else if(type == TFType.LOG_LENGTH_NORM) {
                 document.buildLogLengthNormCountDoc();
             }
-            double[][] idfCounts = indexer.computeIDFVector();
+            
+            double[] idfCounts = indexer.computeIDFVector();
             for(int o = 1; o <= document.getOrder(); o++) {
                 Map<Integer, Double> ngramCounts = document.getNgrams(o);
                 for(int key : ngramCounts.keySet()) {
-                    double tfidf = ngramCounts.get(key) * idfCounts[o - 1][key];
+                    double tfidf = ngramCounts.get(key) * idfCounts[key];
                     document.setNgramCount(key, o, tfidf);
                 }
             }
