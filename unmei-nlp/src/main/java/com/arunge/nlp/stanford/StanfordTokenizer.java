@@ -17,7 +17,7 @@ public class StanfordTokenizer implements Tokenizer {
 
     @Override
     public Stream<Token> tokenize(String text) {
-        PTBTokenizer<CoreLabel> tokenizer = new PTBTokenizer<CoreLabel>(new StringReader(text), new CoreLabelTokenFactory(), "asciiQuotes=true");
+        PTBTokenizer<CoreLabel> tokenizer = new PTBTokenizer<CoreLabel>(new StringReader(text), new CoreLabelTokenFactory(), "asciiQuotes=true,normalizeParentheses=false,normalizeOtherBrackets=false");
         List<Token> tokens = new ArrayList<>();
         while (tokenizer.hasNext()) {
             CoreLabel sToken = tokenizer.next();

@@ -62,14 +62,14 @@ public class TfIdfNgramCorpus extends Corpus {
                     int uniIndex = indexer.getOrAdd(tokStr);
                     boolean added = document.addOrIncrementWord(uniIndex, 1);
                     if(added) {
-                        indexer.incrementDocFrequency(uniIndex, 1);
+                        indexer.incrementDocFrequency(uniIndex);
                     }
                     if(order >= 2 && i >= 1) {
                         int biIndex = indexer.getOrAdd(tokenFormExtractor.apply(tokens.get(i - 1)), 
                                 tokStr);
                         added = document.addOrIncrementNgram(biIndex, 2);
                         if(added) {
-                            indexer.incrementDocFrequency(biIndex, 2);
+                            indexer.incrementDocFrequency(biIndex);
                         }
                     }
                     if(order >= 3 && i >= 2) {
@@ -78,7 +78,7 @@ public class TfIdfNgramCorpus extends Corpus {
                                 tokStr);
                         added = document.addOrIncrementNgram(triIndex, 3);
                         if(added) {
-                            indexer.incrementDocFrequency(triIndex, 3);
+                            indexer.incrementDocFrequency(triIndex);
                         }
                     }
                 }
@@ -129,7 +129,7 @@ public class TfIdfNgramCorpus extends Corpus {
             int newLength = 0;
             for(Integer wordID : d.getVocab().keySet()) {
                 
-                int newWordID = newIndexer.getIndex(indexer.getNgram(wordID, 1));
+                int newWordID = newIndexer.getIndex(indexer.getNgram(wordID));
                 if(newWordID != -1) {
                     newDoc.addOrIncrementWord(newWordID, d.getWord(wordID));
                     newLength += d.getWord(wordID);
@@ -141,7 +141,7 @@ public class TfIdfNgramCorpus extends Corpus {
                 Map<Integer, Double> ngramCounts = d.getNgrams(o);
                 int ngramLength = 0;
                 for(int key : ngramCounts.keySet()) {
-                    String[] ngram = indexer.getNgram(key, o);
+                    String[] ngram = indexer.getNgram(key);
                     int newNgramIndex = newIndexer.getIndex(ngram);
                     if(newNgramIndex != -1 ) {
                         newDoc.addOrIncrementNgram(newNgramIndex, o, ngramCounts.get(key));
@@ -163,7 +163,7 @@ public class TfIdfNgramCorpus extends Corpus {
     
     private boolean computeTfIdfCounts() {
         LOG.info("COMPUTING TFIDF COUNTS");
-        double[][] idfCounts = indexer.computeIDFVector();
+        double[] idfCounts = indexer.computeIDFVector();
         for(int i = 0; i < documents.size(); i++) {
             NGramCorpusDocument d = documents.get(i);
             if(type == TFType.LENGTH_NORM) {
@@ -174,7 +174,7 @@ public class TfIdfNgramCorpus extends Corpus {
             for(int o = 1; o <= d.getOrder(); o++) {
                 Map<Integer, Double> ngramCounts = d.getNgrams(o);
                 for(int key : ngramCounts.keySet()) {
-                    double tfidf = ngramCounts.get(key) * idfCounts[o - 1][key];
+                    double tfidf = ngramCounts.get(key) * idfCounts[key];
                     d.setNgramCount(key, o, tfidf);
                 }
             }

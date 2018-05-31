@@ -286,11 +286,8 @@ public class WekaCorpusModelBuilder {
     
     private Instances buildInstancesFromNgramCorpus() throws IOException {
         CountingNGramIndexer indexer = CountingNGramIndexer.read(vocabFile);
-        Map<Integer, ArrayList<Attribute>> ngramAttrs = WekaCorpusConverters.createNgramVocabAttributes(indexer);
-        ArrayList<Attribute> attributes = new ArrayList<>();
-        for(int i = 1; i <= indexer.getOrder(); i++) {
-            attributes.addAll(ngramAttrs.get(i));
-        }
+        ArrayList<Attribute> ngramAttrs = WekaCorpusConverters.createNgramVocabAttributes(indexer);
+        ArrayList<Attribute> attributes = new ArrayList<>(ngramAttrs);
         int totalVocabAttrs = attributes.size();
         TfIdfNgramCorpus corpus = (TfIdfNgramCorpus) Corpus.loadCorpus(corpusFile);
         for(Map.Entry<FeatureDescriptor, Integer> entry : corpus.getFeatures()) {

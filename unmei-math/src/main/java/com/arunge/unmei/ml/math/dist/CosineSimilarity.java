@@ -37,6 +37,28 @@ public class CosineSimilarity {
         return cosine;
     }
     
+    public double eval(Map<Integer, Double> v1, double[] v2) {
+        double firstNorm = 0.0;
+        double secondNorm = 0.0;
+        double dot = 0.0;
+        for(int i = 0; i < v2.length; i++) {
+            Double val1 = v1.get(i);
+            double val2 = v2[i];
+            if(val1 != null) {
+                dot += val1 * val2;
+                firstNorm += val1 * val1;
+            }
+            secondNorm += val2 * val2;
+        }
+        if(firstNorm == 0 || secondNorm == 0) { 
+            return 0.0;
+        }
+        firstNorm = Math.sqrt(firstNorm);
+        secondNorm = Math.sqrt(secondNorm);
+        double cosine = dot / (firstNorm * secondNorm);
+        return cosine;
+    }
+    
     public double eval(double[] v1, double[] v2) {
         if(v1 == null || v1.length == 0 || v2 == null || v2.length == 0 || v1.length != v2.length) {
             return 0.0;
