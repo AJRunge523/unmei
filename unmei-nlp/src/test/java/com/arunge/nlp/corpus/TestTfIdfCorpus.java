@@ -1,4 +1,4 @@
-package com.arunge.nlp.vocab;
+package com.arunge.nlp.corpus;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
@@ -15,12 +15,12 @@ import org.junit.Test;
 
 import com.arunge.nlp.api.NLPPreprocessingPipeline;
 import com.arunge.nlp.corpus.Corpus;
-import com.arunge.nlp.corpus.CorpusDocument;
-import com.arunge.nlp.corpus.TFType;
 import com.arunge.nlp.corpus.TfIdfCorpus;
+import com.arunge.nlp.corpus.transform.TFType;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
 import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
+import com.arunge.nlp.vocab.Vocabulary;
 
 public class TestTfIdfCorpus {
 
@@ -35,8 +35,8 @@ public class TestTfIdfCorpus {
         assertThat(v.size(), equalTo(10));
         assertThat(corpus.getDocuments().size(), equalTo(1));
         CorpusDocument d = corpus.getDocuments().get(0);
-        assertThat(d.getLength(), equalTo(16));
-        Map<Integer, Double> docVocab = d.getVocab();
+        Map<Integer, Double> docVocab = d.getNgrams(1);
+        assertThat(docVocab.size(), equalTo(10));
         List<String> words = v.getVocabWords();
         assertThat(words, hasItem("the"));
         assertThat(words, hasItem("dog"));
@@ -47,6 +47,7 @@ public class TestTfIdfCorpus {
         assertThat(words, hasItem("went"));
         assertThat(words, hasItem("and"));
         assertThat(words, hasItem("buried"));
+        assertThat(words, hasItem("."));
         for(String w : words) {
             assertThat(docVocab.get(v.getIndex(w)), equalTo(0.0));
         }
@@ -111,7 +112,7 @@ public class TestTfIdfCorpus {
     }
     
     private double fetch(CorpusDocument doc, Vocabulary vocab, String word) {
-        return doc.getWord(vocab.getIndex(word));
+        return doc.getNgramValue(vocab.getIndex(word), 1);
     }
     
     @Test
@@ -154,7 +155,7 @@ public class TestTfIdfCorpus {
         assertThat(v.size(), equalTo(4));
         assertThat(corpus.getDocuments().size(), equalTo(3));
         CorpusDocument d = corpus.getDocuments().get(0);
-        assertThat(d.getLength(), equalTo(3));
+        assertThat(d.getNgrams(1).size(), equalTo(3));
         List<String> words = v.getVocabWords();
         assertThat(words, not(hasItem("this")));
         assertThat(words, hasItem("is"));
@@ -168,7 +169,7 @@ public class TestTfIdfCorpus {
         assertThat(fetch(d, v, "."), equalTo(0.0));
         
         d = corpus.getDocuments().get(1);
-        assertThat(d.getLength(), equalTo(5));
+        assertThat(d.getNgrams(1).size(), equalTo(4));
         assertThat(words, hasItem("that"));
         assertThat(fetch(d, v, "that"), equalTo(2 * Math.log(3.0/2.0)));
         assertThat(words, hasItem("is"));

@@ -35,7 +35,7 @@ public class TokenForms {
      * Returns the form of the token as <seg_id>_<lowercase_token>, or simply the lowercase token if there is no segment ID.
      * @return
      */
-    public static TokenForm segmented() { 
+    public static TokenForm lowercaseSegmented() { 
         return token -> {
             Optional<String> segmentAnn = token.getAnnotation(Annotator.SEGMENT);
             if(segmentAnn.isPresent()) {

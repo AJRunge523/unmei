@@ -14,24 +14,19 @@ import com.arunge.ingest.TextSource;
 import com.arunge.nlp.api.Annotator;
 import com.arunge.nlp.api.TokenForms;
 import com.arunge.nlp.api.TokenForms.TokenForm;
-import com.arunge.nlp.api.Tokenizer;
 import com.arunge.nlp.features.FeatureExtractor;
 import com.arunge.nlp.processors.BasicNLPPreprocessingPipeline;
 import com.arunge.nlp.processors.PorterStemmerImpl;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
-import com.arunge.nlp.stanford.Tokenizers;
 import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
 import com.arunge.nlp.tokenization.TokenFilters.TokenFilter;
 import com.arunge.nlp.tokenization.TokenSplitter;
 import com.arunge.nlp.vocab.CountingNGramIndexer;
-import com.arunge.nlp.vocab.CountingVocabulary;
 
 public class CorpusBuilder {
 
     private static Logger LOG = LoggerFactory.getLogger(CorpusBuilder.class);
-    
-    private Tokenizer tokenizer;
     
     private List<TextSource> sources;
     
@@ -57,38 +52,12 @@ public class CorpusBuilder {
     
     private boolean stemTag;
     
+    private List<CorpusTransformer> corpusTransformers;
+    
     private List<FeatureExtractor<AnnotatedTextDocument>> textFeatureExtractors;
     
     public static CorpusBuilder basicCorpusBuilder() {
         return new CorpusBuilder(new BasicCorpus());
-    }
-    
-    public static CorpusBuilder tfIdfCorpusBuilder() {
-        return new CorpusBuilder(new TfIdfCorpus());
-    }
-    
-    public static CorpusBuilder tfIdfCorpusBuilder(TFType type) {
-        return new CorpusBuilder(new TfIdfCorpus(type));
-    }
-    
-    public static CorpusBuilder fixedTfIdfCorpusBuilder(CountingVocabulary vocab) {
-        return new CorpusBuilder(new FixedVocabTfIdfCorpus(vocab));
-    }
-    
-    public static CorpusBuilder ngramTfIdfCorpusBuilder(int order) {
-        return new CorpusBuilder(new TfIdfNgramCorpus(order));
-    }
-    
-    public static CorpusBuilder ngramTfIdfCorpusBuilder(int order, TFType type) {
-        return new CorpusBuilder(new TfIdfNgramCorpus(order, type));
-    }
-    
-    public static CorpusBuilder countingVocabCorpusBuilder() {
-        return new CorpusBuilder(new CountingCorpus());
-    }
-    
-    public static CorpusBuilder countingVocabCorpusBuilder(CountingVocabulary vocab) {
-        return new CorpusBuilder(new CountingCorpus(vocab));
     }
     
     public static CorpusBuilder countingNGramCorpusBuilder(int order, boolean indexOnly) {
@@ -98,8 +67,8 @@ public class CorpusBuilder {
     public static CorpusBuilder countingNGramCorpusBuilder(CountingNGramIndexer vocab) {
         return new CorpusBuilder(new CountingNGramCorpus(vocab));
     }
-    
-    public static CorpusBuilder fixedTfIdfNgramCorpusBuilder(File vocabFile, File corpusFile) {
+
+    public static CorpusBuilder countingNGramCorpusBuilder(File vocabFile, File corpusFile) {
         CountingNGramIndexer vocab;
         try {
             vocab = CountingNGramIndexer.read(vocabFile);
@@ -107,31 +76,21 @@ public class CorpusBuilder {
             throw new RuntimeException("Unable to load ngram vocabulary from file " + vocabFile.getAbsolutePath(), e);
         }
         try {
-            TfIdfNgramCorpus corpus = (TfIdfNgramCorpus) Corpus.loadCorpus(corpusFile);
-            return new CorpusBuilder(new FixedTfIdfNgramCorpus(vocab, corpus.getFeatures()));
+            CountingNGramCorpus corpus = (CountingNGramCorpus) Corpus.loadCorpus(corpusFile);
+            return new CorpusBuilder(new CountingNGramCorpus(vocab, corpus.getFeatures()));
         } catch (IOException e) {
             throw new RuntimeException("Unable to load corpus from file " + corpusFile.getAbsolutePath(), e);
         }
     }
-    
+        
     private CorpusBuilder(Corpus corpus) {
         this.sources = new ArrayList<>();
         this.corpus = corpus;
-        this.tokenizer = Tokenizers.getDefault();
         this.tokenFilters = new ArrayList<>();
         this.tokenSplitters = new ArrayList<>();
         this.textFeatureExtractors = new LinkedList<>();
         this.trimEvery = -1;
-    }
-    
-    /**
-     * Specify the tokenizer to use.
-     * @param tokenizer
-     * @return
-     */
-    public CorpusBuilder withTokenizer(Tokenizer tokenizer) { 
-        this.tokenizer = tokenizer;
-        return this;
+        this.corpusTransformers = new ArrayList<>();
     }
     
     /**
@@ -143,6 +102,11 @@ public class CorpusBuilder {
     public CorpusBuilder withSources(Collection<TextSource> textSources) {
         this.sources = new ArrayList<>();
         this.sources.addAll(textSources);
+        return this;
+    }
+    
+    public CorpusBuilder withTransformer(CorpusTransformer transformer) {
+        this.corpusTransformers.add(transformer);
         return this;
     }
     
@@ -206,7 +170,7 @@ public class CorpusBuilder {
      * @return
      */
     public CorpusBuilder withSplitFieldTokenForms() { 
-        this.corpus.setTokenFormExtraction(TokenForms.segmented());
+        this.corpus.setTokenFormExtraction(TokenForms.lowercaseSegmented());
         return this;
     }
     
@@ -293,6 +257,9 @@ public class CorpusBuilder {
         if(minDocs > 0 || minCount > 0) {
             corpus.trimTail(minCount, minDocs);
         }
+        for(CorpusTransformer transformer : corpusTransformers) {
+            transformer.transform(corpus);
+        }
         corpus.finalize();
         return corpus;
     }
@@ -304,8 +271,6 @@ public class CorpusBuilder {
      */
     private void tokenizeAndAdd(TextDocument doc) {
         AnnotatedTextDocument processed = pipeline.apply(doc);
-//        processed = docTokenizer.splitTokens(processed);
-//        processed = docTokenizer.filter(processed);
         for(FeatureExtractor<AnnotatedTextDocument> extractor : textFeatureExtractors) { 
             processed.addFeatures(extractor.extractFeatures(processed));
         }

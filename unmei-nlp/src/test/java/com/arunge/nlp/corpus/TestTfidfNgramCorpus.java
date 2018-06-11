@@ -17,6 +17,9 @@ import org.junit.Test;
 
 import com.arunge.nlp.api.NLPPreprocessingPipeline;
 import com.arunge.nlp.api.TokenForms;
+import com.arunge.nlp.corpus.transform.NormType;
+import com.arunge.nlp.corpus.transform.TFType;
+import com.arunge.nlp.corpus.transform.TfidfCorpusTransformer;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
 import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.TextDocument;
@@ -30,16 +33,19 @@ public class TestTfidfNgramCorpus {
     @Test
     public void testSingle() { 
         String a = "The dog picked up the bone. The dog then went and buried the bone.";
-        TfIdfNgramCorpus corpus = new TfIdfNgramCorpus(2);
+        CountingNGramCorpus corpus = new CountingNGramCorpus(2);
         corpus.setTokenFormExtraction(TokenForms.lowercase());
         corpus.addTokenizedDocument(createDocument(a));
+        TfidfCorpusTransformer transformer = new TfidfCorpusTransformer(TFType.RAW, NormType.NONE);
+        transformer.transform(corpus);
         NGramIndexer indexer = corpus.getNgramIndexer();
         Vocabulary v = corpus.getVocabulary();
         assertThat(v.size(), equalTo(11));
         assertThat(corpus.getDocuments().size(), equalTo(1));
-        NGramCorpusDocument d = (NGramCorpusDocument) corpus.getDocuments().get(0);
-        assertThat(d.getLength(), equalTo(16));
-        Map<Integer, Double> docVocab = d.getVocab();
+        CorpusDocument d = (CorpusDocument) corpus.getDocuments().get(0);
+        Map<Integer, Double> docVocab = d.getNgrams(1);
+        assertThat(docVocab.size(), equalTo(10));
+        assertThat(d.getNgrams(2).size(), equalTo(11));
         List<String> words = v.getVocabWords();
         assertThat(words, hasItem("the"));
         assertThat(words, hasItem("dog"));
@@ -50,6 +56,7 @@ public class TestTfidfNgramCorpus {
         assertThat(words, hasItem("went"));
         assertThat(words, hasItem("and"));
         assertThat(words, hasItem("buried"));
+        
         for(String w : words) {
             System.out.println(w + " --> " + indexer.getIndex(w));
             if(w.equals("<DUMMY>")) {
@@ -79,12 +86,13 @@ public class TestTfidfNgramCorpus {
         String a = "This is the simple test the test.";
         String b = "This is a different kind of test.";
         String c = "This is this is a this a kind";
-        TfIdfNgramCorpus corpus = new TfIdfNgramCorpus(2, TFType.RAW);
+        CountingNGramCorpus corpus = new CountingNGramCorpus(2);
         corpus.setTokenFormExtraction(TokenForms.lowercase());
         corpus.addTokenizedDocument(createDocument(a));
         corpus.addTokenizedDocument(createDocument(b));
         corpus.addTokenizedDocument(createDocument(c));
-        
+        TfidfCorpusTransformer transformer = new TfidfCorpusTransformer(TFType.RAW, NormType.NONE);
+        transformer.transform(corpus);
         Vocabulary v = corpus.getVocabulary();
         NGramIndexer indexer = corpus.getNgramIndexer();
         assertThat(v.size(), equalTo(11));
@@ -134,13 +142,15 @@ public class TestTfidfNgramCorpus {
     }
     
     private double fetch(CorpusDocument doc, NGramIndexer indexer, String word) {
-        return doc.getWord(indexer.getIndex(word));
+        return doc.getNgramValue(indexer.getIndex(word), 1);
     }
     
     @Test
     public void testEmptyCorpus() {
-        TfIdfNgramCorpus corpus = new TfIdfNgramCorpus(2);
+        CountingNGramCorpus corpus = new CountingNGramCorpus(2);
         corpus.addTokenizedDocument(createDocument(""));
+        TfidfCorpusTransformer transformer = new TfidfCorpusTransformer(TFType.RAW, NormType.NONE);
+        transformer.transform(corpus);
         Vocabulary v = corpus.getVocabulary();
         //Always a single dummy word in the vocabulary of an ngram corpus.
         assertEquals(1, v.size());
@@ -148,39 +158,40 @@ public class TestTfidfNgramCorpus {
         assertEquals(1, docs.size());
     }
     
-    @Test
-    public void testAddingDocAfterCompute() {
-        String a = "This is my first sentence.";
-        String b = "This is my second sentence.";
-        Corpus corpus = new TfIdfNgramCorpus(2);
-        corpus.addTokenizedDocument(createDocument(a));
-        corpus.getDocuments();
-        try {
-            corpus.addTokenizedDocument(createDocument(b));
-            fail();
-        } catch (UnsupportedOperationException e) { 
-            
-        }
-                
-    }
+//    @Test
+//    public void testAddingDocAfterCompute() {
+//        String a = "This is my first sentence.";
+//        String b = "This is my second sentence.";
+//        Corpus corpus = new TfIdfNgramCorpus(2);
+//        corpus.addTokenizedDocument(createDocument(a));
+//        corpus.getDocuments();
+//        try {
+//            corpus.addTokenizedDocument(createDocument(b));
+//            fail();
+//        } catch (UnsupportedOperationException e) { 
+//            
+//        }
+//                
+//    }
     
     @Test
     public void testTrimCorpus() { 
         String a = "This is my first sentence this is my friend.";
         String b = "This is your second good sentence that good day.";
         String c = "That was a good sentence that.";
-        TfIdfNgramCorpus corpus = new TfIdfNgramCorpus(2, TFType.RAW);
+        CountingNGramCorpus corpus = new CountingNGramCorpus(2);
         corpus.setTokenFormExtraction(TokenForms.lowercase());
         corpus.addTokenizedDocument(createDocument(a));
         corpus.addTokenizedDocument(createDocument(b));
         corpus.addTokenizedDocument(createDocument(c));
         corpus.trimTail(0, 2);
+        TfidfCorpusTransformer transformer = new TfidfCorpusTransformer(TFType.RAW, NormType.NONE);
+        transformer.transform(corpus);
         Vocabulary v = corpus.getVocabulary();
         NGramIndexer indexer = corpus.getNgramIndexer();
         assertThat(v.size(), equalTo(7));
         assertThat(corpus.getDocuments().size(), equalTo(3));
-        NGramCorpusDocument d = (NGramCorpusDocument) corpus.getDocuments().get(0);
-        assertThat(d.getLength(), equalTo(6));
+        CorpusDocument d = (CorpusDocument) corpus.getDocuments().get(0);
         List<String> words = v.getVocabWords();
         assertThat(words, hasItem("this"));
         assertThat(fetch(d, indexer, "this"), equalTo(2 * Math.log(3.0/2.0)));
@@ -193,11 +204,10 @@ public class TestTfidfNgramCorpus {
         assertThat(words, not(hasItem("friend")));
         assertThat(words, hasItem("."));
         assertThat(fetch(d, indexer, "."), equalTo(0.0));
-        assertThat(d.getNgramCount(corpus.indexer.getIndex("this", "is"), 2), equalTo(2 * Math.log(3.0/2.0)));
+        assertThat(d.getNgramValue(corpus.indexer.getIndex("this", "is"), 2), equalTo(2 * Math.log(3.0/2.0)));
         
         
-        d = (NGramCorpusDocument) corpus.getDocuments().get(1);
-        assertThat(d.getLength(), equalTo(7));
+        d = (CorpusDocument) corpus.getDocuments().get(1);
         assertThat(fetch(d, indexer, "that"), equalTo(1 * Math.log(3.0/2.0)));
         assertThat(fetch(d, indexer, "this"), equalTo(1 * Math.log(3.0/2.0)));
         assertThat(words, hasItem("is"));
@@ -208,14 +218,13 @@ public class TestTfidfNgramCorpus {
         assertThat(words, hasItem("sentence"));
         assertThat(words, hasItem("."));
         
-        d = (NGramCorpusDocument) corpus.getDocuments().get(2);
-        assertThat(d.getLength(), equalTo(5));
+        d = (CorpusDocument) corpus.getDocuments().get(2);
         assertThat(d.getNgrams(2).size(), equalTo(2));
         assertThat(words, hasItem("good"));
         
         assertThat(fetch(d, indexer, "good"), equalTo(1 * Math.log(3.0/2.0)));
-        assertThat(d.getNgramCount(corpus.indexer.getIndex("good", "sentence"), 2), equalTo(1 * Math.log(3.0/2.0)));
-        assertThat(d.getNgramCount(corpus.indexer.getIndex("sentence", "that"), 2), equalTo(1 * Math.log(3.0/2.0)));
+        assertThat(d.getNgramValue(corpus.indexer.getIndex("good", "sentence"), 2), equalTo(1 * Math.log(3.0/2.0)));
+        assertThat(d.getNgramValue(corpus.indexer.getIndex("sentence", "that"), 2), equalTo(1 * Math.log(3.0/2.0)));
      
     }
     

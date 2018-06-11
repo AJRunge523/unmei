@@ -10,6 +10,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -86,19 +87,54 @@ public class NGramIndexer implements Serializable {
         return indexers[order - 1];
     }
     
+    public int getIndex(List<String> ngram) { 
+        if(ngram == null) {
+            return -1;
+        }
+        int order = ngram.size();
+        if(order == 0 || order > this.order) {
+            LOG.error("Invalid n-gram order. Order: {}, Max supported order: {}", order, this.order);
+            return -1;
+        }
+        return getIndex(lookupIndexes(ngram, false));
+    }
+    
     /**
      * Returns the index of the n-gram, or -1 if the n-gram is not present in the indexer.
      * @param ngram
      * @return
      */
     public int getIndex(String...ngram) {
+        if(ngram == null) {
+            return -1;
+        }
         int order = ngram.length;
         if(order == 0 || order > this.order){
             LOG.error("Invalid n-gram order. Order: {}, Max supported order: {}", ngram.length, this.order);
             return -1;
         } else {
-            int[] indexedNgram = lookupIndexes(ngram, false);
-            long ngramKey = NgramKeyCompression.generateKey(indexedNgram);
+            return getIndex(lookupIndexes(ngram, false));
+        }
+    }
+    
+    /**
+     * Retrieve the index for the provided ngram, where each word in the ngram has already been indexed.
+     * 
+     * This method is provided to provide potential speed ups in cases where n-grams are being retrieved
+     * along a sliding window to allow for caching previously retrieved indices.
+     * @param ngram
+     * @return
+     */
+    public int getIndex(int...ngram) {
+        if(ngram == null) {
+            return -1;
+        }
+        int order = ngram.length;
+        if(order == 0 || order > this.order){
+            LOG.error("Invalid n-gram order. Order: {}, Max supported order: {}", ngram.length, this.order);
+            return -1;
+        } else {
+            long ngramKey = NgramKeyCompression.generateKey(ngram);
             int retVal = indexers[order - 1].get(ngramKey);
             if(retVal == 0) {
                 return -1;
@@ -192,6 +228,20 @@ public class NGramIndexer implements Serializable {
                 indexes[i] = vocabulary.getIndex(words[i]);
             }
                 
+        }
+        return indexes;
+    }
+    
+    private int[] lookupIndexes(List<String> words, boolean addIfMiss) { 
+        int[] indexes = new int[words.size()];
+        int i = 0;
+        for(String word : words) {
+            if(addIfMiss) {
+                indexes[i] = vocabulary.getOrAdd(word);
+            } else {
+                indexes[i] = vocabulary.getIndex(word);
+            }
+            i+=1;
         }
         return indexes;
     }

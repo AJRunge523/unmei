@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 
 import com.arunge.nlp.api.AnnotatedToken;
 import com.arunge.nlp.api.FeatureDescriptor;
+import com.arunge.nlp.corpus.transform.TFType;
 import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.AnnotatedTextField;
 import com.arunge.nlp.vocab.CountingVocabulary;
@@ -13,6 +14,8 @@ import com.arunge.nlp.vocab.CountingVocabulary;
  * 
  *<p>Corpus with a pre-set Vocabulary. Documents added to this corpus that contain words
  *   not in the provided vocabulary will have those words filtered out.<p>
+ *
+ * @deprecated Use FixedTfIdfNgramCorpus with order 1 instead
  *
  * @author Andrew Runge
  *
@@ -39,7 +42,6 @@ public class FixedVocabTfIdfCorpus extends TfIdfCorpus{
         CorpusDocument document = new CorpusDocument(doc.getDocId());
         String label = doc.getLabel().orElse("");
         document.setLabel(label);
-        int length = 0;
         for(AnnotatedTextField field : doc.getTextFields().values()) {
             for(List<AnnotatedToken> sentence : field.getSentences()) {
                 for(AnnotatedToken t : sentence) {
@@ -47,15 +49,13 @@ public class FixedVocabTfIdfCorpus extends TfIdfCorpus{
                     if(index == -1) {
                         continue;
                     }
-                    document.addOrIncrementWord(index);
-                    length += 1;
+                    document.addOrIncrementNgram(index, 1);
                 }
             }
         }
-        document.setLength(length);
         for(Entry<FeatureDescriptor, Double> feat : doc.getFeatures().entrySet()) {
             int featIndex = featureIndexer.getOrAdd(feat.getKey());
-            document.addFeature(featIndex, feat.getValue());
+            document.setFeature(featIndex, feat.getValue());
         }
         this.documents.add(document);
         this.classLabels.add(label);

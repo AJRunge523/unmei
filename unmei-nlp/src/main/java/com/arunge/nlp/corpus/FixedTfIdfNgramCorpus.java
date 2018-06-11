@@ -7,10 +7,19 @@ import java.util.Map.Entry;
 import com.arunge.nlp.api.AnnotatedToken;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.api.FeatureIndexer;
+import com.arunge.nlp.corpus.transform.TFType;
 import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.AnnotatedTextField;
 import com.arunge.nlp.vocab.CountingNGramIndexer;
 
+/**
+ * 
+ *<p>class_comment_here<p>
+ *
+ * @author Andrew Runge
+ *
+ */
+@Deprecated
 public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
 
     private static final long serialVersionUID = -4551507279092630221L;
@@ -26,7 +35,7 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
         if(finalized) {
             throw new UnsupportedOperationException("Cannot add additional documents to the corpus after tf-idf counts have been computed.");
         }
-        NGramCorpusDocument document = convert(doc, false);
+        CorpusDocument document = convert(doc, false);
         this.documents.add(document);
         if(document.getLabel() != null && !document.getLabel().isEmpty()) { 
             this.classLabels.add(document.getLabel());    
@@ -35,26 +44,26 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
     }
     
     /**
-     * Converts a tokenized TextDocument into an {@link NGramCorpusDocument} without adding it to the corpus.
+     * Converts a tokenized TextDocument into an {@link CorpusDocument} without adding it to the corpus.
      * 
      * @param doc
      * @param tokens
      * @return
      */
-    public NGramCorpusDocument convert(AnnotatedTextDocument doc) { 
+    public CorpusDocument convert(AnnotatedTextDocument doc) { 
         return convert(doc, true);
     }
     
     /**
-     * Converts a tokenized TextDocument into an {@link NGramCorpusDocument}. Optionally performs TF-IDF weighting
+     * Converts a tokenized TextDocument into an {@link CorpusDocument}. Optionally performs TF-IDF weighting
      * on the document to account for whether the document is being added to the corpus or not.
      * @param doc
      * @param tokens
      * @param applyWeights
      * @return
      */
-    private NGramCorpusDocument convert(AnnotatedTextDocument doc, boolean applyWeights) {
-        NGramCorpusDocument document = new NGramCorpusDocument(doc.getDocId(), order);
+    private CorpusDocument convert(AnnotatedTextDocument doc, boolean applyWeights) {
+        CorpusDocument document = new CorpusDocument(doc.getDocId(), order);
         String label = doc.getLabel().orElse("");
         document.setLabel(label);
         for(AnnotatedTextField field : doc.getTextFields().values()) {
@@ -66,8 +75,7 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
                     if(uniIndex == -1) {
                         continue;
                     }
-                    document.addOrIncrementWord(uniIndex);
-                    document.setLength(document.getLength() + 1);
+                    document.addOrIncrementNgram(uniIndex, 1);
                     if(order >= 2 && i >= 1) {
                         int biIndex = indexer.getIndex(tokenFormExtractor.apply(sentence.get(i - 1)), 
                                 tokStr);
@@ -75,7 +83,6 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
                             continue;
                         }
                         document.addOrIncrementNgram(biIndex, 2);
-                        document.setNgramLength(document.getNgramLength(2) + 1, 2);
                     }
                     if(order >= 3 && i >= 2) {
                         int triIndex = indexer.getOrAdd(tokenFormExtractor.apply(sentence.get(i - 2)), 
@@ -85,7 +92,6 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
                             continue;
                         }
                         document.addOrIncrementNgram(triIndex, 3);
-                        document.setNgramLength(document.getNgramLength(3) + 1, 3);
                     }
                 }
             }
@@ -94,14 +100,14 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
         for(Entry<FeatureDescriptor, Double> feat : doc.getFeatures().entrySet()) {
             int featIndex = featureIndexer.getIndex(feat.getKey());
             if(featIndex != -1) {
-                document.addFeature(featIndex, feat.getValue());
+                document.setFeature(featIndex, feat.getValue());
             }
         }
         if(applyWeights) { 
             if(type == TFType.LENGTH_NORM) {
-                document.buildLengthNormCountDoc();
+                document = document.buildLengthNormCountDoc();
             } else if(type == TFType.LOG_LENGTH_NORM) {
-                document.buildLogLengthNormCountDoc();
+                document = document.buildLogLengthNormCountDoc();
             }
             
             double[] idfCounts = indexer.computeIDFVector();
@@ -109,7 +115,7 @@ public class FixedTfIdfNgramCorpus extends TfIdfNgramCorpus {
                 Map<Integer, Double> ngramCounts = document.getNgrams(o);
                 for(int key : ngramCounts.keySet()) {
                     double tfidf = ngramCounts.get(key) * idfCounts[key];
-                    document.setNgramCount(key, o, tfidf);
+                    document.setNgramValue(key, o, tfidf);
                 }
             }
         }

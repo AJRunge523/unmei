@@ -1,4 +1,4 @@
-package com.arunge.nlp.corpus;
+package com.arunge.nlp.corpus.transform;
 
 public enum TFType {
     RAW,

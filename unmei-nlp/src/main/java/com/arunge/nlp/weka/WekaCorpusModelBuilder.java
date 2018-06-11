@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -13,16 +12,13 @@ import org.slf4j.LoggerFactory;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.corpus.Corpus;
 import com.arunge.nlp.corpus.CorpusDocument;
-import com.arunge.nlp.corpus.NGramCorpusDocument;
 import com.arunge.nlp.corpus.TfIdfNgramCorpus;
 import com.arunge.nlp.vocab.CountingNGramIndexer;
-import com.arunge.nlp.vocab.CountingVocabulary;
-import com.arunge.nlp.vocab.Vocabulary;
 
 import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
-import weka.classifiers.functions.LibSVM;
 import weka.classifiers.functions.LibLINEAR;
+import weka.classifiers.functions.LibSVM;
 import weka.classifiers.meta.FilteredClassifier;
 import weka.classifiers.trees.J48;
 import weka.core.Attribute;
@@ -36,7 +32,6 @@ public class WekaCorpusModelBuilder {
 
     public static enum CorpusType {
         NGRAM,
-        WORD,
         ARFF
     }
     
@@ -217,10 +212,6 @@ public class WekaCorpusModelBuilder {
     private Instances loadInstances() throws IOException {
         if(instances == null) {
             switch(type) { 
-            case WORD:
-                LOG.info("Loading instances from corpus files...");
-                this.instances = buildInstancesFromWordCorpus();
-                break;
             case NGRAM:
                 LOG.info("Loading instances from corpus files...");
                 this.instances = buildInstancesFromNgramCorpus();
@@ -250,40 +241,6 @@ public class WekaCorpusModelBuilder {
         }
     }
     
-    private Instances buildInstancesFromWordCorpus() throws IOException {
-        Vocabulary v = CountingVocabulary.read(vocabFile);
-        ArrayList<Attribute> attributes = WekaCorpusConverters.createVocabAttributes(v);
-        LOG.info("Finished loading vocabulary with {} entries.", v.getVocabWords().size());
-        Map<String, Integer> attrIndices = new HashMap<>();
-        for(int i = 0; i < attributes.size(); i++) { 
-            attrIndices.put(attributes.get(i).name(), i);
-        }
-        int numVocabAttrs = attributes.size();
-        Instances instances = null;
-        Corpus corpus = Corpus.loadCorpus(corpusFile);
-        for(Map.Entry<FeatureDescriptor, Integer> entry : corpus.getFeatures()) {
-            attributes.add(new Attribute(entry.getKey().getName()));
-        }
-        ArrayList<String> nullList = null;
-        if(includeIds) {
-            Attribute idAttr = new Attribute("__id", nullList);
-            attributes.add(idAttr);
-        }
-        Attribute classAttr = new Attribute("patent_class_label", new ArrayList<>(corpus.getClassLabels()));
-        attributes.add(classAttr);
-        instances = new Instances("Corpus", attributes, corpus.size());
-        instances.setClassIndex(attributes.size() - 1);
-        int docsRead = 0;
-        for(CorpusDocument doc : corpus) {
-            instances.add(WekaCorpusConverters.convert(doc, numVocabAttrs, attributes, includeIds));
-            docsRead += 1;
-            if(docsRead % 1000 == 0) { 
-                LOG.info("Processed {} corpus entries.", docsRead);
-            }
-        }
-        return instances;
-    }
-    
     private Instances buildInstancesFromNgramCorpus() throws IOException {
         CountingNGramIndexer indexer = CountingNGramIndexer.read(vocabFile);
         ArrayList<Attribute> ngramAttrs = WekaCorpusConverters.createNgramVocabAttributes(indexer);
@@ -304,7 +261,7 @@ public class WekaCorpusModelBuilder {
         instances.setClassIndex(attributes.size() - 1);
         int docsRead = 0;
         for(CorpusDocument doc : corpus) {
-            instances.add(WekaCorpusConverters.convert((NGramCorpusDocument) doc, totalVocabAttrs, indexer, ngramAttrs, attributes, includeIds));
+            instances.add(WekaCorpusConverters.convert((CorpusDocument) doc, totalVocabAttrs, indexer, attributes, includeIds));
             docsRead += 1;
             if(docsRead % 1000 == 0) { 
                 LOG.info("Processed {} corpus entries.", docsRead);

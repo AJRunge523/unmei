@@ -99,10 +99,6 @@ public class TestDirectoryTextSource {
         }
     }
     
-    private void createTempFile(String content) throws IOException {
-        createTempFile(content, ".txt");
-    }
-    
     private void createTempFile(String content, String suffix) throws IOException {
         Path temp = Files.createTempFile(testDir, "tst-", suffix);
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(temp.toFile()))){ 

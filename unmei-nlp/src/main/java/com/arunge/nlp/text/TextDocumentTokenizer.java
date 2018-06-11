@@ -1,9 +1,7 @@
 package com.arunge.nlp.text;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -12,9 +10,8 @@ import com.arunge.nlp.api.Token;
 import com.arunge.nlp.api.Tokenizer;
 import com.arunge.nlp.stanford.Tokenizers;
 import com.arunge.nlp.tokenization.TokenFilters;
-import com.arunge.nlp.tokenization.TokenSplitter;
 import com.arunge.nlp.tokenization.TokenFilters.TokenFilter;
-import com.google.common.collect.Streams;
+import com.arunge.nlp.tokenization.TokenSplitter;
 
 /**
  * 

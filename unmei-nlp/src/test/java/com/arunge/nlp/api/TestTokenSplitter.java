@@ -2,9 +2,6 @@ package com.arunge.nlp.api;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Collection;
-import java.util.stream.Collectors;
-
 import org.junit.Test;
 
 import com.arunge.nlp.tokenization.TokenSplitter;

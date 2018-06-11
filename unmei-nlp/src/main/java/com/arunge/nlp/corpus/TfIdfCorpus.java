@@ -2,10 +2,12 @@ package com.arunge.nlp.corpus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import com.arunge.nlp.api.AnnotatedToken;
 import com.arunge.nlp.api.FeatureDescriptor;
+import com.arunge.nlp.corpus.transform.TFType;
 import com.arunge.nlp.text.AnnotatedTextDocument;
 import com.arunge.nlp.text.AnnotatedTextField;
 import com.arunge.nlp.vocab.CountingVocabulary;
@@ -19,6 +21,8 @@ import com.arunge.nlp.vocab.Vocabulary;
  *   to add documents to the corpus once the getDocuments() method has been invoked once.
  *
  *<p>
+ *
+ * @deprecated Use TfIdfNgramCorpus with order 1 instead.
  *
  * @author Andrew Runge
  *
@@ -51,12 +55,11 @@ public class TfIdfCorpus extends Corpus {
         CorpusDocument document = new CorpusDocument(doc.getDocId());
         String label = doc.getLabel().orElse("");
         document.setLabel(label);
-        document.setLength(doc.getLength());
         for(AnnotatedTextField field : doc.getTextFields().values()) {
             for(List<AnnotatedToken> sentence : field.getSentences()) {
                 for(AnnotatedToken t : sentence) {
                     int index = vocab.getOrAdd(t.text().toLowerCase());
-                    boolean added = document.addOrIncrementWord(index);
+                    boolean added = document.addOrIncrementNgram(index, 1);
                     if(added) { 
                         vocab.incrementDocFrequency(index);
                     }
@@ -65,7 +68,7 @@ public class TfIdfCorpus extends Corpus {
         }
         for(Entry<FeatureDescriptor, Double> feat : doc.getFeatures().entrySet()) {
             int featIndex = featureIndexer.getOrAdd(feat.getKey());
-            document.addFeature(featIndex, feat.getValue());
+            document.setFeature(featIndex, feat.getValue());
         }
         vocab.incrementNumDocs();
         this.documents.add(document);
@@ -106,9 +109,10 @@ public class TfIdfCorpus extends Corpus {
             } else if(type == TFType.LOG_LENGTH_NORM) {
                 d = d.buildLogLengthNormCountDoc();
             }
-            for(int w : d.getVocab().keySet()) {
-                double tfidf = d.getVocab().get(w) * idfCounts[w];
-                d.setWordCount(w, tfidf);
+            Map<Integer, Double> vocab = d.getNgrams(1);
+            for(int w : vocab.keySet()) {
+                double tfidf = vocab.get(w) * idfCounts[w];
+                d.setNgramValue(w, 1, tfidf);
             }
             documents.set(i, d);
         }
@@ -124,15 +128,13 @@ public class TfIdfCorpus extends Corpus {
             CorpusDocument newDoc = new CorpusDocument(d.getDocId());
             newDoc.setLabel(d.getLabel());
             newDoc.setFeatures(d.getFeatures());
-            int newLength = 0;
-            for(Integer wordID : d.getVocab().keySet()) {
+            Map<Integer, Double> docVocab = d.getNgrams(1);
+            for(Integer wordID : docVocab.keySet()) {
                 int newWordID = newVocab.getIndex(vocab.getWord(wordID));
                 if(newWordID != -1) {
-                    newDoc.addOrIncrementWord(newWordID, d.getWord(wordID));
-                    newLength += d.getWord(wordID);
+                    newDoc.addOrIncrementNgram(newWordID, 1, d.getNgramValue(wordID, 1));
                 }
             }
-            newDoc.setLength(newLength);
             documents.set(i, newDoc);
         }
         this.vocab = newVocab;

@@ -70,8 +70,6 @@ public class CountingNGramIndexer extends NGramIndexer {
         }
     }
     
-    
-    
     public void incrementDocFrequency(int index) {
         if(index < 0 || index >= index2Keys.length) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Keys.length));

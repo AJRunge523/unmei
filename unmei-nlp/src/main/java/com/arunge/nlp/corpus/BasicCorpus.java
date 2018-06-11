@@ -31,21 +31,20 @@ public class BasicCorpus extends Corpus {
     
     @Override
     public int addTokenizedDocument(AnnotatedTextDocument doc)  {
-        CorpusDocument document = new CorpusDocument(doc.getDocId());
+        CorpusDocument document = new CorpusDocument(doc.getDocId(), 1);
         String label = doc.getLabel().orElse("");
         document.setLabel(label);
-        document.setLength(doc.getLength());
         for(AnnotatedTextField field : doc.getTextFields().values()) {
             for(List<AnnotatedToken> sentence : field.getSentences()) {
                 for(AnnotatedToken token : sentence) {
                     int index = vocab.getOrAdd(tokenFormExtractor.apply(token));
-                    document.addOrIncrementWord(index);
+                    document.addOrIncrementNgram(index, 1);
                 }
             }
         }
         for(Entry<FeatureDescriptor, Double> feat : doc.getFeatures().entrySet()) {
             int featIndex = featureIndexer.getOrAdd(feat.getKey());
-            document.addFeature(featIndex, feat.getValue());
+            document.setFeature(featIndex, feat.getValue());
         }
         this.documents.add(document);
         this.classLabels.add(label);

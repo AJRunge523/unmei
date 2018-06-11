@@ -2,6 +2,7 @@ package com.arunge.nlp.text;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.arunge.nlp.api.AnnotatedToken;
 import com.arunge.nlp.api.Annotator;
@@ -23,6 +24,10 @@ public class AnnotatedTextField {
 
     public AnnotatedTextField(List<List<AnnotatedToken>> sentences) {
         this.sentences = sentences;
+    }
+    
+    public List<AnnotatedToken> getText() { 
+        return getSentences().stream().flatMap(l -> l.stream()).collect(Collectors.toList());
     }
     
     public List<List<AnnotatedToken>> getSentences() {

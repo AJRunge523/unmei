@@ -18,8 +18,8 @@ import com.arunge.nlp.corpus.BasicCorpus;
 import com.arunge.nlp.corpus.Corpus;
 import com.arunge.nlp.corpus.CorpusDocument;
 import com.arunge.nlp.stanford.StanfordNLPPreprocessingPipeline;
-import com.arunge.nlp.text.FeatureTextDocument;
 import com.arunge.nlp.text.AnnotatedTextDocument;
+import com.arunge.nlp.text.FeatureTextDocument;
 
 public class TestCorpusDocumentSerialization {
 
@@ -35,7 +35,7 @@ public class TestCorpusDocumentSerialization {
         AnnotatedTextDocument preprocessed = pipeline.apply(doc);
         corpus.addTokenizedDocument(preprocessed);
         CorpusDocument cd = corpus.getDocuments().get(0);
-        System.out.println(cd.getLength());
+        System.out.println(cd.getNgramLength(1));
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream stream = new ObjectOutputStream(baos);
         stream.writeObject(corpus);
@@ -46,9 +46,9 @@ public class TestCorpusDocumentSerialization {
         CorpusDocument decoded = deser.getDocuments().get(0);
         assertEquals(decoded.getLabel(), cd.getLabel());
         assertEquals(decoded.getDocId(), cd.getDocId());
-        assertEquals(decoded.getLength(), cd.getLength());
-        Map<Integer, Double> origVocab = cd.getVocab();
-        Map<Integer, Double> decodedVocab = decoded.getVocab();
+        assertEquals(decoded.getNgramLength(1), cd.getNgramLength(1), 0.00001);
+        Map<Integer, Double> origVocab = cd.getNgrams(1);
+        Map<Integer, Double> decodedVocab = decoded.getNgrams(1);
         assertEquals(origVocab.size(), decodedVocab.size());
         for(Entry<Integer, Double> entry : decodedVocab.entrySet()) {
             assertTrue(origVocab.containsKey(entry.getKey()));

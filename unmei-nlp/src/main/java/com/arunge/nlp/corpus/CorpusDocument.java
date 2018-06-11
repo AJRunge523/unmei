@@ -1,111 +1,117 @@
 package com.arunge.nlp.corpus;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 
+/**
+ * 
+ *<p>A <code>CorpusDocument</code> is an indexed representation of a text document. The text of the document
+ *   is represented using a bag-of-words model, where each word (or n-gram) is simply represented as an index
+ *   in an external vocabulary and a value. The value may be a count, or it may be transformed by an external
+ *   application to be something such as a weight for the term for this document.<p>
+ *
+ * @author Andrew Runge
+ *
+ */
 public class CorpusDocument implements Serializable {
 
-    private static final long serialVersionUID = 3021118049524358838L;
+    private static final long serialVersionUID = 446866277115911309L;
+    private Int2DoubleOpenHashMap[] docNgrams;
 
     private final String docId;
-
-    private Int2DoubleOpenHashMap docVocab;
-    private int length;
     private String label;
     private Int2DoubleOpenHashMap docFeatures;
     
+    /**
+     * Create a 
+     * @param docId
+     */
     public CorpusDocument(String docId) {
+        this(docId, 1);
+    }
+    
+    public CorpusDocument(String docId, int order) {
         this.docId = docId;
-        this.docVocab = new Int2DoubleOpenHashMap();
-        this.length = 0;
+        this.docNgrams = new Int2DoubleOpenHashMap[order];
+        for(int i = 0; i < docNgrams.length; i++) {
+            docNgrams[i] = new Int2DoubleOpenHashMap();
+        }
         this.docFeatures = new Int2DoubleOpenHashMap();
     }
 
-    protected CorpusDocument(CorpusDocument doc) {
-        this.docId = doc.docId;
-        this.docVocab = new Int2DoubleOpenHashMap(doc.docVocab);
-        this.length = doc.length;
-        this.docFeatures = new Int2DoubleOpenHashMap(doc.docFeatures);
+    public CorpusDocument(CorpusDocument copy) { 
+        this.docId = copy.docId;
+        this.docNgrams = Arrays.copyOf(copy.docNgrams, copy.docNgrams.length);
+        this.docFeatures = new Int2DoubleOpenHashMap(copy.docFeatures);
+        this.label = copy.label;
     }
     
-    /**
-     * Adds the word to the document or, if already present, increments the count for the word instead.
-     * Returns true if the word was added, false otherwise.
-     * @param wordIndex
-     * @return
-     */
-    public boolean addOrIncrementWord(int wordIndex) {
-        return addOrIncrementWord(wordIndex, 1.0);
+    public boolean addOrIncrementNgram(int ngramIndex, int order) {
+        return addOrIncrementNgram(ngramIndex, order, 1.0);
     }
     
-    public boolean addOrIncrementWord(int wordIndex, double count) {
-//        length += count;
-        double result = docVocab.merge(wordIndex, count, (a, b) -> a + b);
-        if(result > count) {
+    public boolean addOrIncrementNgram(int ngramIndex, int order, double count) {
+        int orderIndex = order - 1;
+        double result = docNgrams[orderIndex].merge(ngramIndex, count, (a, b) -> a + b);
+        if(result > count) { 
             return false;
         }
         return true;
-    }
-    
-    public void setWordCount(int wordIndex, double count) {
-        docVocab.put(wordIndex, count);
-    }
-    
-    public void setLength(int length) {
-        this.length = length;
-    }
-    
-    public Map<Integer, Double> getVocab(){ 
-        return Collections.unmodifiableMap(docVocab);
-    }
-    
-    public Map<Integer, Double> getFeatures() {
-        return Collections.unmodifiableMap(docFeatures);
-    }
-    
-    public double getWord(int index) { 
-        
-        if(docVocab.containsKey(index)) {
-            return docVocab.get(index);
-        } else {
-            return 0.0;
-        }
-    }
-    
-    public CorpusDocument buildLengthNormCountDoc() {
-        CorpusDocument copy = new CorpusDocument(this);
-        copy.docVocab.replaceAll((key, value) -> value / length);
-        return copy;
-    }
-    
-    public CorpusDocument buildLogLengthNormCountDoc() { 
-        CorpusDocument copy = new CorpusDocument(this);
-        copy.docVocab.replaceAll((key, value) -> 1 + Math.log(value / length));
-        return copy;
-    }
-    
-    public void addFeature(int index, double value) {
-        this.docFeatures.put(index, value);
     }
     
     public String getDocId() {
         return docId;
     }
     
-    public int getLength() {
-        return length;
+    /**
+     * Returns the sum of the occurrence counts for all n-grams of the specified order.
+     * 
+     * Note that if the counts have been modified, this may not reflect the true length of the document.
+     * @param order
+     * @return
+     */
+    public double getNgramLength(int order) { 
+        if(order <= 0 || order > getOrder()) {
+            throw new IndexOutOfBoundsException(String.format("Invalid n-gram order: %d, expected 1 <= input <= %d", order, getOrder()));
+        }
+        return docNgrams[order - 1].values().stream().reduce(0.0, (a, b) -> a + b);
     }
     
-    public String getLabel() {
-        return label;
+    public int getOrder() {
+        return docNgrams.length;
     }
-
-    public void setLabel(String label) {
-        this.label = label;
+    
+    /**
+     * Retrieve the value associated with this ngram index.
+     * @param ngramIndex
+     * @param order
+     * @return
+     */
+    public double getNgramValue(int ngramIndex, int order) {
+        return docNgrams[order - 1].get(ngramIndex);
+    }
+    
+    public Map<Integer, Double> getNgrams(int order){ 
+        return Collections.unmodifiableMap(docNgrams[order - 1]);
+    }
+    
+    /**
+     * Update the value associated with this ngram index.
+     * @param ngramIndex
+     * @param order
+     * @return
+     */
+    public void setNgramValue(int ngramIndex, int order, double count) { 
+        docNgrams[order - 1].put(ngramIndex, count);
+    }
+    
+    public Map<Integer, Double> getFeatures() {
+        return Collections.unmodifiableMap(docFeatures);
     }
     
     public Optional<Double> getFeature(int feature) {
@@ -123,17 +129,34 @@ public class CorpusDocument implements Serializable {
     public void setFeatures(Map<Integer, Double> features) {
         this.docFeatures = new Int2DoubleOpenHashMap(features);
     }
-    
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((docFeatures == null) ? 0 : docFeatures.hashCode());
-        result = prime * result + ((docId == null) ? 0 : docId.hashCode());
-        result = prime * result + ((docVocab == null) ? 0 : docVocab.hashCode());
-        result = prime * result + ((label == null) ? 0 : label.hashCode());
-        result = prime * result + length;
-        return result;
+       
+    public String getLabel() {
+        return label;
     }
 
+    public void setLabel(String label) {
+        this.label = label;
+    }
+    
+    public CorpusDocument buildLengthNormCountDoc() { 
+        CorpusDocument copy = new CorpusDocument(this);
+        for(int i = 0; i < docNgrams.length; i++) {
+            double length = getNgramLength(i + 1);
+            copy.docNgrams[i].replaceAll((key, value) -> value / length);
+        }
+        return copy;
+    }
+    
+    public CorpusDocument buildLogLengthNormCountDoc() { 
+        CorpusDocument copy = new CorpusDocument(this);
+        for(int i = 0; i < docNgrams.length; i++) {
+            double length = getNgramLength(i + 1);
+            copy.docNgrams[i].replaceAll((key, value) -> 1 + Math.log(value / length));
+        }
+        return copy;
+    }
+    
+    
+    
+    
 }

@@ -11,6 +11,16 @@ import com.arunge.nlp.text.AnnotatedTextField;
 import com.arunge.nlp.vocab.CountingVocabulary;
 import com.arunge.nlp.vocab.Vocabulary;
 
+/**
+ * 
+ *<p>Corpus that indexes single words for each document.<p>
+ *
+ * @deprecated Use CountingNgramCorpus with order 1 instead.
+ *
+ * @author Andrew Runge
+ *
+ */
+@Deprecated
 public class CountingCorpus extends Corpus{
 
     private static final long serialVersionUID = -2881947250402363606L;
@@ -34,13 +44,12 @@ public class CountingCorpus extends Corpus{
         CorpusDocument document = new CorpusDocument(doc.getDocId());
         String label = doc.getLabel().orElse("");
         document.setLabel(label);
-        document.setLength(doc.getLength());
         for(AnnotatedTextField field : doc.getTextFields().values()) {
             for(List<AnnotatedToken> sentence : field.getSentences()) {
                 for(AnnotatedToken token : sentence) {
                     int index = vocabulary.getOrAdd(tokenFormExtractor.apply(token));
                     vocabulary.incrementWordFrequency(index);
-                    boolean added = document.addOrIncrementWord(index);
+                    boolean added = document.addOrIncrementNgram(index, 1);
                     if(added) {
                         vocabulary.incrementDocFrequency(index);
                     }
@@ -49,7 +58,7 @@ public class CountingCorpus extends Corpus{
         }
         for(Entry<FeatureDescriptor, Double> feat : doc.getFeatures().entrySet()) {
             int featIndex = featureIndexer.getOrAdd(feat.getKey());
-            document.addFeature(featIndex, feat.getValue());
+            document.setFeature(featIndex, feat.getValue());
         }
         this.documents.add(document);
         this.classLabels.add(label);

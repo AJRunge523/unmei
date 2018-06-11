@@ -2,13 +2,11 @@ package com.arunge.nlp.weka;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.arunge.nlp.corpus.Corpus;
 import com.arunge.nlp.corpus.CorpusDocument;
-import com.arunge.nlp.corpus.NGramCorpusDocument;
 import com.arunge.nlp.vocab.CountingNGramIndexer;
 import com.arunge.nlp.vocab.NGramIndexer;
 import com.arunge.nlp.vocab.Vocabulary;
@@ -52,38 +50,9 @@ public class WekaCorpusConverters {
         }
         return attributes;
     }
-    
+        
     /**
      * Create a Weka {@link Instance} from a {@link CorpusDocument}. If the document specifies a label, it will be added to the end of the attribute list.
-     * @param doc The <code>CorpusDocument</code> to convert.
-     * @param vocabSize The size of the global vocabulary
-     * @param attributes The set of attributes extracted from a <code>Vocabulary</code>
-     * @return
-     */
-    public static Instance convert(CorpusDocument doc, int vocabSize, List<Attribute> attributes, boolean includeId) {
-        
-        Map<Integer, Double> docVocab = doc.getVocab();
-        double[] values = new double[attributes.size()];
-        
-        for(int wordIndex : docVocab.keySet()) {
-            values[wordIndex] = docVocab.get(wordIndex);
-        }
-        Map<Integer, Double> docFeats = doc.getFeatures();
-        for(int featIndex : docFeats.keySet()) {
-            values[vocabSize + featIndex] = docFeats.get(featIndex);
-        }
-        Instance instance = new SparseInstance(1.0, values);
-        if(includeId) {
-            instance.setValue(attributes.get(attributes.size() - 2), doc.getDocId());
-        }
-        if(doc.getLabel() != null && !doc.getLabel().isEmpty()) {
-            instance.setValue(attributes.get(attributes.size() - 1), doc.getLabel());
-        }
-        return instance;
-    }
-    
-    /**
-     * Create a Weka {@link Instance} from a {@link NGramCorpusDocument}. If the document specifies a label, it will be added to the end of the attribute list.
      * @param doc The document to process
      * @param totalVocabAttrs The total number of vocabulary attributes for all n-gram orders
      * @param indexer The n-gram indexer
@@ -91,8 +60,8 @@ public class WekaCorpusConverters {
      * @param attributes Complete list of all attributes.
      * @return
      */
-    public static Instance convert(NGramCorpusDocument doc, int totalVocabAttrs, CountingNGramIndexer indexer, 
-            ArrayList<Attribute> vocabAttrIndices, List<Attribute> attributes, boolean includeId) { 
+    public static Instance convert(CorpusDocument doc, int totalVocabAttrs, NGramIndexer indexer, 
+            List<Attribute> attributes, boolean includeId) { 
         double[] values = new double[attributes.size()];
 
         for(int i = 1; i <= doc.getOrder(); i++) {

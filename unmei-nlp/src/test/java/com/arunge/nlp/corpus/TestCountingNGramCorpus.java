@@ -35,8 +35,8 @@ public class TestCountingNGramCorpus {
         NGramIndexer indexer = corpus.getNgramIndexer();
         assertThat(v.size(), equalTo(11));
         assertThat(corpus.getDocuments().size(), equalTo(1));
-        NGramCorpusDocument d = (NGramCorpusDocument) corpus.getDocuments().get(0);
-        assertThat(d.getLength(), equalTo(16));
+        CorpusDocument d = (CorpusDocument) corpus.getDocuments().get(0);
+        assertThat(d.getNgramLength(1), equalTo(16.0));
         List<String> words = v.getVocabWords();
         assertThat(words, hasItem("the"));
         assertThat(fetch(d, indexer, "the"), equalTo(4.0));
@@ -57,6 +57,10 @@ public class TestCountingNGramCorpus {
         assertThat(words, hasItem("buried"));
         assertThat(fetch(d, indexer, "buried"), equalTo(1.0));
         Map<Integer, Double> docBigrams = d.getNgrams(2);
+        for(Integer key : docBigrams.keySet()) { 
+            String[] ngram = corpus.indexer.getNgram(key);
+            System.out.println(ngram[0] + " " + ngram[1]);
+        }
         assertEquals(11, docBigrams.size());
         assertTrue(docBigrams.containsKey(corpus.indexer.getIndex("the", "dog")));
         
@@ -155,7 +159,7 @@ public class TestCountingNGramCorpus {
     }
     
     private double fetch(CorpusDocument doc, NGramIndexer vocab, String word) {
-        return doc.getWord(vocab.getIndex(word));
+        return doc.getNgramValue(vocab.getIndex(word), 1);
     }
     
     @Test
