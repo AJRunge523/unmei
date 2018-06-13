@@ -67,14 +67,11 @@ public class NGramIterator implements Iterator<String[]> {
     }
     
     private void loadNext() {
-        if(tokenIter == null || !tokenIter.hasNext()) {
-            if(sentIter == null || !sentIter.hasNext()) {
-                if(!fieldIter.hasNext()) {
-                    return;
-                }
+        while(tokenIter == null || !tokenIter.hasNext()) {
+            while((sentIter == null || !sentIter.hasNext()) && fieldIter.hasNext()) {
                 sentIter = fieldIter.next().getSentences().iterator();
             }
-            if(!sentIter.hasNext()) {
+            if(sentIter == null || !sentIter.hasNext()) {
                 return;
             }
             if(!crossSentences) { 

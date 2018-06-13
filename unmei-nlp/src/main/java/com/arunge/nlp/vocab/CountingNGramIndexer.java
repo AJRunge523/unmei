@@ -36,7 +36,6 @@ public class CountingNGramIndexer extends NGramIndexer {
                 //Get the original ngram and add it to the new indexer
                 String[] ngram = getNgram(i);
                 int index = copy.getOrAdd(false, ngram);
-                System.out.println(Arrays.stream(ngram).reduce("", (a, b) -> a + " " + b) + " --> " + index);
                 copy.docFreqVectors[index] = docFreqVectors[i];
                 copy.ngramFreqVectors[index] = ngramFreqVectors[i];
                 copy.numNgrams[ngram.length - 1] += ngramFreqVectors[i];
@@ -71,6 +70,9 @@ public class CountingNGramIndexer extends NGramIndexer {
     }
     
     public void incrementDocFrequency(int index) {
+        if(frozen) {
+            return;
+        }
         if(index < 0 || index >= index2Keys.length) {
             throw new IndexOutOfBoundsException(String.format("Index %d is out of bounds, current size: %d", index, index2Keys.length));
         }

@@ -1,9 +1,10 @@
 package com.arunge.nlp.text;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -126,5 +127,50 @@ public class NGramIteratorTest {
         AnnotatedTextDocument emptyDoc = pipeline.apply(text);
         NGramIterator iter = new NGramIterator(emptyDoc, TokenForms.lowercase(), 3);
         assertThat(iter.hasNext(), is(false));
+    }
+    
+    @Test
+    @DisplayName("can handle an empty field in a document")
+    void testEmptyField() { 
+        NGramIterator iter = new NGramIterator(doc, TokenForms.lowercase(), 1, false);
+        TextDocument text = new TextDocument("test", "I met you before the fall of Rome. And I begged you to let me take you home.");
+        String[] words = new String[] {"i", "met", "you", "before", "the", "fall", "of", "rome", ".", "and", "i", "begged", "you", 
+                "to", "let", "me", "take", "you", "home", "."};
+        StanfordNLPPreprocessingPipeline pipeline = new StanfordNLPPreprocessingPipeline();
+        AnnotatedTextDocument emptyDoc = pipeline.apply(text);
+        emptyDoc.addTextField("test", new AnnotatedTextField(new ArrayList<>()));
+        emptyDoc.addTextField("test2", new AnnotatedTextField(new ArrayList<>()));
+        emptyDoc.addTextField("test3", new AnnotatedTextField(new ArrayList<>()));
+        int numNgrams = 0;
+        while(iter.hasNext()) {
+            String[] next = iter.next();
+            String ngram = next.length == 1 ? next[0] : Arrays.stream(next).reduce((a, b) -> a + " " + b).get(); 
+            assertThat(ngram, equalTo(words[numNgrams]));
+            numNgrams += 1;
+        }
+        assertThat(numNgrams, equalTo(words.length));
+    }
+    
+    @Test
+    @DisplayName("can handle an empty sentence in the document")
+    void testEmptySent() { 
+        NGramIterator iter = new NGramIterator(doc, TokenForms.lowercase(), 1, false);
+        TextDocument text = new TextDocument("test", "I met you before the fall of Rome. And I begged you to let me take you home.");
+        String[] words = new String[] {"i", "met", "you", "before", "the", "fall", "of", "rome", ".", "and", "i", "begged", "you", 
+                "to", "let", "me", "take", "you", "home", "."};
+        StanfordNLPPreprocessingPipeline pipeline = new StanfordNLPPreprocessingPipeline();
+        AnnotatedTextDocument emptyDoc = pipeline.apply(text);
+        emptyDoc.addTextField("test1", new AnnotatedTextField(emptyDoc.getDefaultField().getSentences()));
+        emptyDoc.addTextField("test2", new AnnotatedTextField(emptyDoc.getDefaultField().getSentences()));
+        emptyDoc.getDefaultField().getSentences().add(0, new ArrayList<>());
+        int numNgrams = 0;
+        while(iter.hasNext()) {
+            String[] next = iter.next();
+            String ngram = next.length == 1 ? next[0] : Arrays.stream(next).reduce((a, b) -> a + " " + b).get(); 
+            assertThat(ngram, equalTo(words[numNgrams]));
+            numNgrams += 1;
+        }
+        assertThat(numNgrams, equalTo(words.length));
+            
     }
 }

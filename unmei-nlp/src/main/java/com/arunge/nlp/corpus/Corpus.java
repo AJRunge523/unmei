@@ -131,35 +131,35 @@ public abstract class Corpus implements Iterable<CorpusDocument>, Serializable {
         this.finalized = true;
         
         //Perform tf-idf weight computation on corpus
-        List<Integer> tfIdfFeatures = new ArrayList<>();
-        for(Map.Entry<FeatureDescriptor, Integer> desc : featureIndexer) {
-            if(desc.getKey().getWeightType().equals(FeatureWeightType.TFIDF)) {
-                tfIdfFeatures.add(desc.getValue());
-            }
-        }
-        double[] docFreqs = new double[tfIdfFeatures.size()];
-        for(CorpusDocument d : getDocuments()) {
-            for(int i = 0; i < tfIdfFeatures.size(); i++) {
-                Optional<Double> featVal = d.getFeature(tfIdfFeatures.get(i));
-                if(featVal.isPresent() && featVal.get() > 0 ) {
-                    docFreqs[i] += 1;
-                }
-            }
-        }
-        int corpusSize = size();
-        for(int i = 0; i < docFreqs.length; i++) {
-            if(docFreqs[i] > 0) { 
-                docFreqs[i] = Math.log(corpusSize / docFreqs[i]);
-            }
-        }
-        for(CorpusDocument d : getDocuments()) {
-            for(int i = 0; i < docFreqs.length; i++) {
-                Optional<Double> val = d.getFeature(tfIdfFeatures.get(i));
-                if(val.isPresent()) {
-                    d.setFeature(tfIdfFeatures.get(i), val.get() * docFreqs[i]);
-                }
-            }
-        }
+//        List<Integer> tfIdfFeatures = new ArrayList<>();
+//        for(Map.Entry<FeatureDescriptor, Integer> desc : featureIndexer) {
+//            if(desc.getKey().getWeightType().equals(FeatureWeightType.TFIDF)) {
+//                tfIdfFeatures.add(desc.getValue());
+//            }
+//        }
+//        double[] docFreqs = new double[tfIdfFeatures.size()];
+//        for(CorpusDocument d : getDocuments()) {
+//            for(int i = 0; i < tfIdfFeatures.size(); i++) {
+//                Optional<Double> featVal = d.getFeature(tfIdfFeatures.get(i));
+//                if(featVal.isPresent() && featVal.get() > 0 ) {
+//                    docFreqs[i] += 1;
+//                }
+//            }
+//        }
+//        int corpusSize = size();
+//        for(int i = 0; i < docFreqs.length; i++) {
+//            if(docFreqs[i] > 0) { 
+//                docFreqs[i] = Math.log(corpusSize / docFreqs[i]);
+//            }
+//        }
+//        for(CorpusDocument d : getDocuments()) {
+//            for(int i = 0; i < docFreqs.length; i++) {
+//                Optional<Double> val = d.getFeature(tfIdfFeatures.get(i));
+//                if(val.isPresent()) {
+//                    d.setFeature(tfIdfFeatures.get(i), val.get() * docFreqs[i]);
+//                }
+//            }
+//        }
     }
     
     @Override

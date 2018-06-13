@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.arunge.nlp.api.FeatureDescriptor;
 import com.arunge.nlp.corpus.Corpus;
 import com.arunge.nlp.corpus.CorpusDocument;
-import com.arunge.nlp.corpus.TfIdfNgramCorpus;
+import com.arunge.nlp.corpus.NGramCorpus;
 import com.arunge.nlp.vocab.CountingNGramIndexer;
 
 import weka.classifiers.Classifier;
@@ -246,7 +246,7 @@ public class WekaCorpusModelBuilder {
         ArrayList<Attribute> ngramAttrs = WekaCorpusConverters.createNgramVocabAttributes(indexer);
         ArrayList<Attribute> attributes = new ArrayList<>(ngramAttrs);
         int totalVocabAttrs = attributes.size();
-        TfIdfNgramCorpus corpus = (TfIdfNgramCorpus) Corpus.loadCorpus(corpusFile);
+        NGramCorpus corpus = (NGramCorpus) Corpus.loadCorpus(corpusFile);
         for(Map.Entry<FeatureDescriptor, Integer> entry : corpus.getFeatures()) {
             attributes.add(new Attribute(entry.getKey().getName()));
         }

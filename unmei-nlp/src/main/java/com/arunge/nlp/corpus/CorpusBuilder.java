@@ -60,14 +60,38 @@ public class CorpusBuilder {
         return new CorpusBuilder(new BasicCorpus());
     }
     
+    /**
+     * Create a builder for a {@link CountingNGramCorpus} with the specified order.
+     * Can flag the corpus to only index vocabulary words to support cases where
+     * only the vocabulary is needed from the set of documents being process.
+     * @param order
+     * @param indexOnly
+     * @return
+     */
     public static CorpusBuilder countingNGramCorpusBuilder(int order, boolean indexOnly) {
         return new CorpusBuilder(new CountingNGramCorpus(order, indexOnly));
     }
     
+    /**
+     * Creates a new CorpusBuilder using the provided vocabulary. Freezes the vocabulary
+     * of the newly created corpus to prevent additional terms from being added.
+     * @param vocab
+     * @return
+     */
     public static CorpusBuilder countingNGramCorpusBuilder(CountingNGramIndexer vocab) {
-        return new CorpusBuilder(new CountingNGramCorpus(vocab));
+        CountingNGramCorpus corpus = new CountingNGramCorpus(vocab);
+        corpus.freezeVocab(true);
+        return new CorpusBuilder(corpus);
     }
 
+    /**
+     * Create a new CorpusBuilder using the vocabulary and features from the respective
+     * vocab and corpus files. Freezes the vocab and feature sets to prevent additional
+     * features from being added as the corpus is being built. 
+     * @param vocabFile
+     * @param corpusFile
+     * @return
+     */
     public static CorpusBuilder countingNGramCorpusBuilder(File vocabFile, File corpusFile) {
         CountingNGramIndexer vocab;
         try {
@@ -77,7 +101,10 @@ public class CorpusBuilder {
         }
         try {
             CountingNGramCorpus corpus = (CountingNGramCorpus) Corpus.loadCorpus(corpusFile);
-            return new CorpusBuilder(new CountingNGramCorpus(vocab, corpus.getFeatures()));
+            CountingNGramCorpus newCorpus = new CountingNGramCorpus(vocab, corpus.getFeatures());
+            newCorpus.freezeFeatures(true);
+            newCorpus.freezeVocab(true);
+            return new CorpusBuilder(newCorpus);
         } catch (IOException e) {
             throw new RuntimeException("Unable to load corpus from file " + corpusFile.getAbsolutePath(), e);
         }

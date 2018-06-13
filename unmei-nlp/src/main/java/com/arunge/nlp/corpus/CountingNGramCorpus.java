@@ -70,11 +70,13 @@ public class CountingNGramCorpus extends NGramCorpus {
     
     /**
      * If the vocab is frozen, new words and ngrams that have not been previously encountered
-     * will be ignored instead of indexed and added to the corpus documents..
+     * will be ignored instead of indexed and added to the corpus documents. Counts for vocabulary
+     * will be frozen as well.
      * @param flag
      */
     public void freezeVocab(boolean flag) { 
         this.freezeVocab = flag;
+        this.getNgramIndexer().freezeVocab();
     }
     
     /**
@@ -83,13 +85,13 @@ public class CountingNGramCorpus extends NGramCorpus {
      * @param flag
      */
     public void freezeFeatures(boolean flag) { 
-        this.freezeVocab = flag;
+        this.freezeFeatures = flag;
     }
     
     @Override
     public int addTokenizedDocument(AnnotatedTextDocument doc) {
         if(finalized) {
-            throw new UnsupportedOperationException("Cannot add additional documents to the corpus after tf-idf counts have been computed.");
+            throw new UnsupportedOperationException("Cannot add additional documents to the corpus after corpus has been finalized.");
         }
         CorpusDocument document = new CorpusDocument(doc.getDocId(), order);
         String label = doc.getLabel().orElse("");
